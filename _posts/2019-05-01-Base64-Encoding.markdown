@@ -2,7 +2,7 @@
 layout: post
 title:  "Welcome to Jekyll!"
 date:   2022-09-17 15:28:52 -0700
-categories: algorithm compression serialization
+categories: algorithm compression serialization api-design
 ---
 Base64 encoding has this nice feature where the encoded information is safely copy-pasteable and stored as plaintext in files. It uses numbers represented in Base64 with a limited character set. Here's the table from [RFC 4648](https://www.ietf.org/rfc/rfc4648.txt).
 
