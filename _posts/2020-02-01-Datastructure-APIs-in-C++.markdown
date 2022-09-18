@@ -2,7 +2,7 @@
 layout: post
 title:  "Datastructure APIs in C++"
 date:   2020-02-01 15:28:52 -0700
-categories: algorithm architecture datastructure
+categories: algorithm architecture data-structures
 ---
 Designing a great data structure API is mostly a grey area with lots of room for opinions. Why care about my opinion? Well, take a peek at [some of my headers on GitHub](https://web.archive.org/web/20200408025742/https://github.com/RandyGaul/cute_headers). If you think they might look useful or interesting upon first glance, then read on, as all those headers were written with the ideas here in mind. Here are my major priorities for a data structure API to tackle, listed with the most important first.
 
