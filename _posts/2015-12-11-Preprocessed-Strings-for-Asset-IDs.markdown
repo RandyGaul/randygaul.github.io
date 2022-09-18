@@ -38,11 +38,11 @@ It seems like a large relief on the linker and leaves me to thinking that C/C++ 
 
 Compiling code can now look more or less like this:
 
-{% highlight %}
+```
 perl bundle.pl bundle.cpp ./master.cpp
 sid preprocessed.cpp bundle.cpp
 g++ preprocessed.cpp -o out.exe
-{% endhighlight %}
+```
 
 First collect all source into a single CPP, then preprocess the hash macros, and finally send the rest off to the compiler. Compile times should shrink, and I’ve even caught wind that modern compilers have an easier time with certain optimizations when fed only a single file (rumors! I can’t confirm this myself, at least not for a while).
 
