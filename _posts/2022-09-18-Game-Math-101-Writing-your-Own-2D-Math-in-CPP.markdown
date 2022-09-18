@@ -100,7 +100,6 @@ g++ main.cpp tigr.c -o math_101_program -s -lGLU -lGL -lX11
 If you already know how to use a [make and a makefile](https://www.gnu.org/software/make/manual/make.html) you can optionally use this makefile. But this is completely optional and not necessary.
 
 {% highlight make %}
-CFLAGS = -I../..
 ifeq ($(OS),Windows_NT)
 	LDFLAGS = -s -lopengl32 -lgdi32
 else
@@ -145,7 +144,7 @@ int main()
 	while (!tigrClosed(screen) && !tigrKeyDown(screen, TK_ESCAPE)) {
 		tigrClear(screen, tigrRGB(0x80, 0x90, 0xa0));
 
-        // Add these two lines here!
+        	// Add these two lines here!
 		tigrLine(screen, 0, 0, 100, 100, tigrRGB(0xFF, 0xFF, 0xFF));
 		tigrLine(screen, 0, 0, 30, 200, tigrRGB(0xFF, 0xFF, 0xFF));
 
@@ -182,7 +181,7 @@ struct v2
 
 Operations on vectors are what make them useful. The simplest ones are addition and subtraction. We can add two vectors together or subtract two vectors from each other by adding and subtracting their components. By using operator overloading we can easily implement these operations in C++.
 
-{% highlight make %}
+{% highlight cpp %}
 v2 operator+(v2 a, v2 b)
 {
     return v2(a.x + b.x, a.y + b.y);
@@ -196,7 +195,7 @@ v2 operator-(v2 a, v2 b)
 
 Though from here on out let's just pack these functions up onto a single line each. We're going to write a lot of them!
 
-{% highlight make %}
+{% highlight cpp %}
 v2 operator+(v2 a, v2 b) { return v2(a.x + b.x, a.y + b.y); }
 v2 operator-(v2 a, v2 b) { return v2(a.x - b.x, a.y - b.y); }
 {% endhighlight %}
@@ -426,7 +425,7 @@ However, for that last function to work properly we must expand our vector opera
 v2 operator*(v2 a, float b) { return v2(a.x * b, a.y * b); }
 {% endhighlight %}
 
-In math notation we can the length of a vector v is |v|. When we multiply a vector v, we are multiplying each component, which in turn scales the length by the same value. We can calculate the length of a vector by utilizing the Pythagorean Theorem `a^2 + b^c = c^2`, where a, b and c are sides of a right triangle.
+In math notation we can the length of a vector v is `|v|`. When we multiply a vector v, we are multiplying each component, which in turn scales the length by the same value. We can calculate the length of a vector by utilizing the Pythagorean Theorem `a^2 + b^c = c^2`, where a, b and c are sides of a right triangle.
 
 ![pythagorean](/assets/pythagorean.png)
 
@@ -527,10 +526,7 @@ int main()
 {
 	screen = tigrWindow(640, 480, "Math 101", 0);
 
-	float t = 0;
 	while (!tigrClosed(screen) && !tigrKeyDown(screen, TK_ESCAPE)) {
-		float dt = tigrTime();
-		t += dt;
 		tigrClear(screen, color_black());
 
 		aabb box = aabb(v2(120, 120), v2(540, 360));
@@ -546,3 +542,90 @@ int main()
 {% endhighlight %}
 
 ![draw_box](/assets/draw_box.png)
+
+And finally let's animate this box a bit. It's time to introduce time... Haha. I'm practicing my dad jokes. `tigrTime` is a nice function that returns the number of seconds since it was last called as a float. We can use it to calculate a `dt` variable once per game loop, standing for `delta time`. This will be used a whole lot later in this article for animating things and calculating movements.
+
+For now we can use time and pass it into cosine and sine functions `cosf` and `sinf` from the `math.h` C runtime header. Go ahead and check out these edits to our program. I added `// New code!` comments on all the edited lines since the last version.
+
+{% endhighlight %}
+#include <math.h>
+#include "tigr.h"
+
+struct v2
+{
+	v2() { }
+	v2(float x, float y) { this->x = x; this->y = y; }
+	float x;
+	float y;
+};
+
+v2 operator+(v2 a, v2 b) { return v2(a.x + b.x, a.y + b.y); }
+v2 operator-(v2 a, v2 b) { return v2(a.x - b.x, a.y - b.y); }
+v2 operator*(v2 a, float b) { return v2(a.x * b, a.y * b); }
+float len(v2 v) { return sqrtf(v.x * v.x + v.y * v.y); }
+
+struct aabb
+{
+	aabb() { }
+	aabb(v2 min, v2 max) { this->min = min; this->max = max; }
+	v2 min;
+	v2 max;
+};
+
+float width(aabb box) { return box.max.x - box.min.x; }
+float height(aabb box) { return box.max.y - box.min.y; }
+v2 center(aabb box) { return (box.min + box.max) * 0.5f; }
+
+Tigr* screen;
+
+void draw_point(v2 p, TPixel color) { tigrPlot(screen, (int)p.x, (int)p.y, color); }
+void draw_line(v2 a, v2 b, TPixel color) { tigrLine(screen, (int)a.x, (int)a.y, (int)b.x, (int)b.y, color); }
+
+void draw_box(aabb box, TPixel color)
+{
+	float w = width(box) + 1;
+	float h = height(box) + 1;
+	draw_line(box.min, box.min + v2(w, 0), color);
+	draw_line(box.min, box.min + v2(0, h), color);
+	draw_line(box.max, box.max - v2(w, 0), color);
+	draw_line(box.max, box.max - v2(0, h), color);
+}
+
+TPixel color_white() { return tigrRGB(0xFF, 0xFF, 0xFF); }
+TPixel color_black() { return tigrRGB(0, 0, 0); }
+TPixel color_red() { return tigrRGB(0xFF, 0, 0); }
+TPixel color_green() { return tigrRGB(0, 0xFF, 0); }
+TPixel color_blue() { return tigrRGB(0, 0, 0xFF); }
+
+int main()
+{
+	screen = tigrWindow(640, 480, "Math 101", 0);
+
+	float t = 0; // New code!
+	while (!tigrClosed(screen) && !tigrKeyDown(screen, TK_ESCAPE)) {
+		float dt = tigrTime(); // New code!
+		t += dt; // New code!
+		tigrClear(screen, color_black());
+
+		aabb box = aabb(v2(120, 120), v2(540, 360));
+		v2 offset = v2(cosf(t), sinf(t)) * 100.0f; // New code!
+		box.min = box.min - offset; // New code!
+		box.max = box.max + offset; // New code!
+		draw_box(box, color_white());
+
+		tigrUpdate(screen);
+	}
+
+	tigrFree(screen);
+
+	return 0;
+}
+{% highlight cpp %}
+
+![morphing_box](/assets/morphing_box.gif)
+
+### More to Come!
+
+THIS POST IS A WIP
+
+I'LL ADD MORE SOON
