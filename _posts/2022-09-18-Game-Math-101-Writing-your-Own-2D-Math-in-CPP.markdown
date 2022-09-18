@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Game Math 101, Writing your Own 2D Math in C++"
-date:   2022-17-2022
+date:   2022-09-18
 categories: math
 ---
 THIS POST IS A WIP
