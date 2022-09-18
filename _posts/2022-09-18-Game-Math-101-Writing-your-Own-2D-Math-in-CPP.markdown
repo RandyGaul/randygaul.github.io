@@ -547,7 +547,7 @@ And finally let's animate this box a bit. It's time to introduce time... Haha. I
 
 For now we can use time and pass it into cosine and sine functions `cosf` and `sinf` from the `math.h` C runtime header. Go ahead and check out these edits to our program. I added `// New code!` comments on all the edited lines since the last version.
 
-{% endhighlight %}
+{% highlight cpp %}
 #include <math.h>
 #include "tigr.h"
 
@@ -620,7 +620,7 @@ int main()
 
 	return 0;
 }
-{% highlight cpp %}
+{% endhighlight %}
 
 ![morphing_box](/assets/morphing_box.gif)
 
