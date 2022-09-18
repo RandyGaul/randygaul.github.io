@@ -29,7 +29,7 @@ twitter_username: randypgaul
 github_username:  randygaul
 
 # Build settings
-theme: minima
+theme: midnight
 plugins:
   - jekyll-feed
 
