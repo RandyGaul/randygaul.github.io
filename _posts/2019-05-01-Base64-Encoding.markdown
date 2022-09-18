@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Welcome to Jekyll!"
+title:  "Base64 Encoding in C"
 date:   2022-09-17 15:28:52 -0700
 categories: algorithm compression serialization api-design
 ---
