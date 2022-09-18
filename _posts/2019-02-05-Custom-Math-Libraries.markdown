@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Welcome to Jekyll!"
+title:  "Custom Math Libraries"
 date:   2019-02-05
 categories: math api-design
 ---
