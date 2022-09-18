@@ -4,7 +4,7 @@ title:  "Preprocessed Strings for Asset IDs"
 date:   2015-12-11 15:28:52 -0700
 categories: data-structures architecture hash
 ---
-Mick West [posted up on his site](https://web.archive.org/web/20190116142425/http://cowboyprogramming.com/2007/01/04/practical-hash-ids/) a really good overview of some different methods for hashing string ids and gave good motivation for optimizing this area early on in a project. Please do review his article as it’s a prerequisite to this post, and his article is just really good.
+Mick West [posted up on his site](http://cowboyprogramming.com/2007/01/04/practical-hash-ids/) a really good overview of some different methods for hashing string ids and gave good motivation for optimizing this area early on in a project. Please do review his article as it’s a prerequisite to this post, and his article is just really good.
 
 I’ve been primarily concerned with memory management of strings as they are extremely hairy to work with. For me specifically I’ve ruled out the option of a string class — they hide important details and it’s too easy to write poor (but functional) code with them. This is just my opinion. Based on that opinion I’d like to achieve these points:
 
