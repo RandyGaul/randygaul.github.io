@@ -629,3 +629,18 @@ int main()
 THIS POST IS A WIP
 
 I'LL ADD MORE SOON
+
+Topics to come:
+* dot product
+* skew
+* cross product
+* distance
+* bezier
+* safe inversion
+* rotation
+* matrices
+* easing functions
+* transforms
+* plane
+* rays/raycasting
+* basic collision detection
