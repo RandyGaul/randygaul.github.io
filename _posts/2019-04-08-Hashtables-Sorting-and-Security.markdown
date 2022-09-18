@@ -33,6 +33,7 @@ Additionally, performance gains when iterating key/value pairs will “win-back�
 
 ---
 
+
 Let us cover secure hash tables. If a hash table is used to cache or map data coming in from the network (or any other insecure data), if the attacker can learn or guess what kind of table and hash function is in use, they can craft input to try to degenerate table lookups to a time complexity of O(N) linear time. This is a type of DoS attack. Not too long ago this attack was popularized on applications using popular hash functions such as murmurhash3.
 
 [libsodium](https://web.archive.org/web/20190409084702/https://libsodium.gitbook.io/doc/hashing/short-input_hashing) has some functions made specifically for hash tables, where the hash function takes a secret seed. This lets the table mitigate DoS effectiveness on the table itself. The webpage recommends ensuring table sizes are a prime number in order to ensure all bits of the hash function are utilized. In my own code I have modified Mattias’s table to use the libsodium function in the above link, in order to mitigate this style of DoS attack.
@@ -40,6 +41,7 @@ Let us cover secure hash tables. If a hash table is used to cache or map data co
 This is not necessary for the common use-case, where the code’s internal hash function is very fast, and preferable when data is known to not be malicious.
 
 ---
+
 
 Finally, I have made some small modifications to Mattias’s table to allow arbitrarily sized keys. This modification is quite trivial, and simply changes keys from uint64_t to void* + key_size, where the key_size is constant for the table’s lifetime.
 
