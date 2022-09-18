@@ -4,7 +4,7 @@ title:  "Character Controllers"
 date:   2019-03-09
 categories: collision-detection
 ---
-I created a [demo called player2d](https://web.archive.org/web/20200330094511/https://github.com/RandyGaul/player2d) by implementing a swept 2D character controller, showcasing a bunch of [cute_headers](https://web.archive.org/web/20200330094511/https://github.com/RandyGaul/cute_headers) in action.
+I created a [demo called player2d](https://github.com/RandyGaul/player2d) by implementing a swept 2D character controller, showcasing a bunch of [cute_headers](https://github.com/RandyGaul/cute_headers) in action.
 
 ![fabulous_demo](/assets/fabulous_demo.gif)
 

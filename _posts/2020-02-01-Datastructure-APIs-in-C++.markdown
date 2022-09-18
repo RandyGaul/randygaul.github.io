@@ -4,7 +4,7 @@ title:  "Datastructure APIs in C++"
 date:   2020-02-01 15:28:52 -0700
 categories: algorithm architecture data-structures
 ---
-Designing a great data structure API is mostly a grey area with lots of room for opinions. Why care about my opinion? Well, take a peek at [some of my headers on GitHub](https://web.archive.org/web/20200408025742/https://github.com/RandyGaul/cute_headers). If you think they might look useful or interesting upon first glance, then read on, as all those headers were written with the ideas here in mind. Here are my major priorities for a data structure API to tackle, listed with the most important first.
+Designing a great data structure API is mostly a grey area with lots of room for opinions. Why care about my opinion? Well, take a peek at [some of my headers on GitHub](https://github.com/RandyGaul/cute_headers). If you think they might look useful or interesting upon first glance, then read on, as all those headers were written with the ideas here in mind. Here are my major priorities for a data structure API to tackle, listed with the most important first.
 
 1. Anticipate common fundamental use-cases and minimize friction for these cases.
 2. Expose as little as possible to the user.
@@ -18,9 +18,9 @@ Note I placed “overhead” as third, not first! In this case overhead means a 
 
 We all know what run-time overhead is, it’s the cost of running the code, as in how slow or fast it is.
 
-Compile-time overhead is usually overlooked by C++ developers. It’s completely possible to time compilation and run performance analysis, especially over a long period of time as a project matures. It’s also possible with MSVC to [diagnose specifically what is incurring long compile times](https://web.archive.org/web/20200408025742/https://aras-p.info/blog/2017/10/23/Best-unknown-MSVC-flag-d2cgsummary/). There’s really no excuse for having awful compilation times, even in really large projects with millions of lines of code. The key is to minimize inter-dependencies between different sections of code, in order to minimize the following equation (just an approximation, but a good approximation).
+Compile-time overhead is usually overlooked by C++ developers. It’s completely possible to time compilation and run performance analysis, especially over a long period of time as a project matures. It’s also possible with MSVC to [diagnose specifically what is incurring long compile times](https://aras-p.info/blog/2017/10/23/Best-unknown-MSVC-flag-d2cgsummary/). There’s really no excuse for having awful compilation times, even in really large projects with millions of lines of code. The key is to minimize inter-dependencies between different sections of code, in order to minimize the following equation (just an approximation, but a good approximation).
 
-compile + link time = number of [translation units](https://web.archive.org/web/20200408025742/https://en.wikipedia.org/wiki/Translation_unit_(programming)) * amount of code to process
+compile + link time = number of [translation units](https://en.wikipedia.org/wiki/Translation_unit_(programming)) * amount of code to process
 
 The actual solution to slow compiling/link times is to put as little code as possible into each translation unit as possible. This means some real thought and planning has to go into each included file. All other strategies, such as inredibuild, precompiled headers, or unity builds are merely band-aids that can be applied to codebases that grow large without a strong underlying architecture. In other words, these alternative strategies can be the cheapest and only option for old codebases, but, with some skill and foresight these problems can simply be avoided in the first place.
 
