@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Collision Detection in 2D or 3D – Some Steps for Success"
-date:   2022-09-17 15:28:52 -0700
+date:   2019-06-19
 categories: collision-detection
 ---
 These are my personal opinions about recommended readings for collision detection in either 2D or 3D. This post is intended to act as a jumpstart in order to avoid endless swaths of outdated, poorly written, or otherwise incorrect information.

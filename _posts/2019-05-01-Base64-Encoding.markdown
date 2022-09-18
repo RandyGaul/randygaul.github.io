@@ -1,12 +1,12 @@
 ---
 layout: post
-title:  "Welcome to Jekyll!"
-date:   2022-09-17 15:28:52 -0700
+title:  "Base64 Encoding in C"
+date:   2019-05-01
 categories: algorithm compression serialization api-design
 ---
 Base64 encoding has this nice feature where the encoded information is safely copy-pasteable and stored as plaintext in files. It uses numbers represented in Base64 with a limited character set. Here's the table from [RFC 4648](https://www.ietf.org/rfc/rfc4648.txt).
 
-{% highlight %}
+```
                       Table 1: The Base 64 Alphabet
 
      Value Encoding  Value Encoding  Value Encoding  Value Encoding
@@ -27,7 +27,7 @@ Base64 encoding has this nice feature where the encoded information is safely co
         14 O            31 f            48 w         (pad) =
         15 P            32 g            49 x
         16 Q            33 h            50 y
-{% endhighlight %}
+```
 
 We can see all numbers from 0-63 are mapped to characters. To encode binary data into Base64 we simply loop over our data in 7-bit chunks and output the correct character. To decode we can build a table of characters that maps to the correct 7-bit binary data. Encoding and decoding should be one for loop and a table lookup, along with some bit manipulation to pack/unpack 7 bits at a time.
 
