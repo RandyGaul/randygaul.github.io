@@ -4,7 +4,7 @@ title:  "Virtual File Systems in Games!"
 date:   2019-03-20 15:28:52 -0700
 categories: architecture
 ---
-After a particularly elucidating conversation with [Mattias Gustavsson on Twitter](https://web.archive.org/web/20190320091637/https://twitter.com/Mattias_G), I came to the delightful realization that a well utilized virtual path system can be make writing games a lot more fun. This blog post describes some basic, but strong, benefits in favor of using a virtual file system, as opposed to using the OS’s native file system alone.
+After a particularly elucidating conversation with [Mattias Gustavsson on Twitter](https://twitter.com/Mattias_G), I came to the delightful realization that a well utilized virtual path system can be make writing games a lot more fun. This blog post describes some basic, but strong, benefits in favor of using a virtual file system, as opposed to using the OS’s native file system alone.
 
 ---
 
