@@ -37,7 +37,7 @@ If you're on Windows I recommend to use [TDM-GCC](https://jmeubank.github.io/tdm
 
 #### Mac
 
-On Mac just download Xcode from the Asset Store. This will automatically install the command line tools for you, including `g++`. Open up the terminal application ***after you install Xcode***. You can also use the [cd command]([https://www.youtube.com/watch?v=BfXh11ryBJg](https://www.youtube.com/watch?v=DvwWJw6Ppns) to move the terminal to another folder. Move it to your `math_101` folder.
+On Mac just download Xcode from the Asset Store. This will automatically install the command line tools for you, including `g++`. Open up the terminal application ***after you install Xcode***. You can also use the [cd command](https://www.youtube.com/watch?v=DvwWJw6Ppns) to move the terminal to another folder. Move it to your `math_101` folder.
 
 Most people reading this article will be using a Windows machine. One Windows they use command prompt instead of Terminal. Later when reading, if you see "command prompt" just think Terminal instead. The rest of the steps are 99% the same, despite this difference.
 
@@ -100,7 +100,6 @@ g++ main.cpp tigr.c -o math_101_program -s -lGLU -lGL -lX11
 If you already know how to use a [make and a makefile](https://www.gnu.org/software/make/manual/make.html) you can optionally use this makefile. But this is completely optional and not necessary.
 
 {% highlight make %}
-CFLAGS = -I../..
 ifeq ($(OS),Windows_NT)
 	LDFLAGS = -s -lopengl32 -lgdi32
 else
@@ -145,7 +144,7 @@ int main()
 	while (!tigrClosed(screen) && !tigrKeyDown(screen, TK_ESCAPE)) {
 		tigrClear(screen, tigrRGB(0x80, 0x90, 0xa0));
 
-        // Add these two lines here!
+        	// Add these two lines here!
 		tigrLine(screen, 0, 0, 100, 100, tigrRGB(0xFF, 0xFF, 0xFF));
 		tigrLine(screen, 0, 0, 30, 200, tigrRGB(0xFF, 0xFF, 0xFF));
 
@@ -182,7 +181,7 @@ struct v2
 
 Operations on vectors are what make them useful. The simplest ones are addition and subtraction. We can add two vectors together or subtract two vectors from each other by adding and subtracting their components. By using operator overloading we can easily implement these operations in C++.
 
-{% highlight make %}
+{% highlight cpp %}
 v2 operator+(v2 a, v2 b)
 {
     return v2(a.x + b.x, a.y + b.y);
@@ -196,7 +195,7 @@ v2 operator-(v2 a, v2 b)
 
 Though from here on out let's just pack these functions up onto a single line each. We're going to write a lot of them!
 
-{% highlight make %}
+{% highlight cpp %}
 v2 operator+(v2 a, v2 b) { return v2(a.x + b.x, a.y + b.y); }
 v2 operator-(v2 a, v2 b) { return v2(a.x - b.x, a.y - b.y); }
 {% endhighlight %}
@@ -426,11 +425,11 @@ However, for that last function to work properly we must expand our vector opera
 v2 operator*(v2 a, float b) { return v2(a.x * b, a.y * b); }
 {% endhighlight %}
 
-In math notation we can the length of a vector v is |v|. When we multiply a vector v, we are multiplying each component, which in turn scales the length by the same value. We can calculate the length of a vector by utilizing the Pythagorean Theorem `a^2 + b^c = c^2`, where a, b and c are sides of a right triangle.
+In math notation we can the length of a vector v is `|v|`. When we multiply a vector v, we are multiplying each component, which in turn scales the length by the same value. We can calculate the length of a vector by utilizing the Pythagorean Theorem `a^2 + b^c = c^2`, where a, b and c are sides of a right triangle.
 
 ![pythagorean](/assets/pythagorean.png)
 
-We can think of our vector's length as c, where a and b are equal to our vectors individual components x and y. We can write down a function to solve for the hypotenuse (or the length of our vector).
+We can think of our vector's length as c, where a and b are equal to our vectors individual components x and y. We can write down a function to solve for the hypotenuse (or the length of our vector, also known as the *magnitude*).
 
 {% highlight cpp %}
 #include <math.h> // For sqrtf function.
@@ -527,10 +526,7 @@ int main()
 {
 	screen = tigrWindow(640, 480, "Math 101", 0);
 
-	float t = 0;
 	while (!tigrClosed(screen) && !tigrKeyDown(screen, TK_ESCAPE)) {
-		float dt = tigrTime();
-		t += dt;
 		tigrClear(screen, color_black());
 
 		aabb box = aabb(v2(120, 120), v2(540, 360));
@@ -546,3 +542,273 @@ int main()
 {% endhighlight %}
 
 ![draw_box](/assets/draw_box.png)
+
+And finally let's animate this box a bit. It's time to introduce time... Haha. I'm practicing my dad jokes. `tigrTime` is a nice function that returns the number of seconds since it was last called as a float. We can use it to calculate a `dt` variable once per game loop, standing for `delta time`. This will be used a whole lot later in this article for animating things and calculating movements.
+
+For now we can use time and pass it into cosine and sine functions `cosf` and `sinf` from the `math.h` C runtime header. Go ahead and check out these edits to our program. I added `// New code!` comments on all the edited lines since the last version.
+
+{% highlight cpp %}
+#include <math.h>
+#include "tigr.h"
+
+struct v2
+{
+	v2() { }
+	v2(float x, float y) { this->x = x; this->y = y; }
+	float x;
+	float y;
+};
+
+v2 operator+(v2 a, v2 b) { return v2(a.x + b.x, a.y + b.y); }
+v2 operator-(v2 a, v2 b) { return v2(a.x - b.x, a.y - b.y); }
+v2 operator*(v2 a, float b) { return v2(a.x * b, a.y * b); }
+float len(v2 v) { return sqrtf(v.x * v.x + v.y * v.y); }
+
+struct aabb
+{
+	aabb() { }
+	aabb(v2 min, v2 max) { this->min = min; this->max = max; }
+	v2 min;
+	v2 max;
+};
+
+float width(aabb box) { return box.max.x - box.min.x; }
+float height(aabb box) { return box.max.y - box.min.y; }
+v2 center(aabb box) { return (box.min + box.max) * 0.5f; }
+
+Tigr* screen;
+
+void draw_point(v2 p, TPixel color) { tigrPlot(screen, (int)p.x, (int)p.y, color); }
+void draw_line(v2 a, v2 b, TPixel color) { tigrLine(screen, (int)a.x, (int)a.y, (int)b.x, (int)b.y, color); }
+
+void draw_box(aabb box, TPixel color)
+{
+	float w = width(box) + 1;
+	float h = height(box) + 1;
+	draw_line(box.min, box.min + v2(w, 0), color);
+	draw_line(box.min, box.min + v2(0, h), color);
+	draw_line(box.max, box.max - v2(w, 0), color);
+	draw_line(box.max, box.max - v2(0, h), color);
+}
+
+TPixel color_white() { return tigrRGB(0xFF, 0xFF, 0xFF); }
+TPixel color_black() { return tigrRGB(0, 0, 0); }
+TPixel color_red() { return tigrRGB(0xFF, 0, 0); }
+TPixel color_green() { return tigrRGB(0, 0xFF, 0); }
+TPixel color_blue() { return tigrRGB(0, 0, 0xFF); }
+
+int main()
+{
+	screen = tigrWindow(640, 480, "Math 101", 0);
+
+	float t = 0; // New code!
+	while (!tigrClosed(screen) && !tigrKeyDown(screen, TK_ESCAPE)) {
+		float dt = tigrTime(); // New code!
+		t += dt; // New code!
+		tigrClear(screen, color_black());
+
+		aabb box = aabb(v2(120, 120), v2(540, 360));
+		v2 offset = v2(cosf(t), sinf(t)) * 100.0f; // New code!
+		box.min = box.min - offset; // New code!
+		box.max = box.max + offset; // New code!
+		draw_box(box, color_white());
+
+		tigrUpdate(screen);
+	}
+
+	tigrFree(screen);
+
+	return 0;
+}
+{% endhighlight %}
+
+![morphing_box](/assets/morphing_box.gif)
+
+### Transforming the Screen Space
+
+When we're talking about games and math the word transform means to go from one coordinate space to another. You're likely already familiar with the [traditional 2D cartesian space](https://en.wikipedia.org/wiki/Cartesian_coordinate_system), whether or not you're familiar with the terminology. There are two axes, one for x and one for y. However, it's possible to take that 2D space and transform it to another space.
+
+The ways of transformation we will get into later include:
+
+* Translation
+* Scaling (also includes flipping/mirroring)
+* Rotating
+
+For now we'll just cover some translating and flipping. In the math_101 program our coordinate space has the origin at the top-left pixel with the y-axis pointing downward. Though, most games use a different coordinate space for the screen where the origin is at the center, and the y-axis is pointing upwards. We want to use math to transform the screen to this new form.
+
+![screen_basis_transform](/assets/screen_basis_transform.png)
+
+To perform this transformation we can start by negating the y-axis. This will make the y-axis point upwards. We can start writing a function called `world_to_screen`, which will take a point in our game world with the origin at center of the screen, to the screen coordinates we've been using so far.
+
+{% highlight cpp %}
+v2 world_to_screen(v2 p)
+{
+	p.y = -p.y;
+	return p;
+}
+{% endhighlight %}
+
+The next step would be to offset the point by half the screen width and half the screen height, placing points that were originally at (0, 0) at (screen_width / 2, screen_height / 2).
+
+{% highlight cpp %}
+v2 world_to_screen(v2 p)
+{
+	p.y = -p.y;
+	float half_screen_width = 640.0f / 2.0f;
+	float half_screen_height = 480.0f / 2.0f;
+	p.x += half_screen_width;
+	p.y += half_screen_height;
+	return p;
+}
+{% endhighlight %}
+
+Now we can hook this function into all of our drawing functions so far. If it works, we should be able to draw a box centered at (0, 0) and have it appear in the center of the screen. It's also a convenient time to implement operators for `+=`, `-=`, `*=`, and division operators `/` and `/=`.
+
+{% highlight cpp %}
+v2 operator+(v2 a, v2 b) { return v2(a.x + b.x, a.y + b.y); }
+v2 operator+=(v2& a, v2 b) { a = v2(a.x + b.x, a.y + b.y); return a; }
+v2 operator-(v2 a, v2 b) { return v2(a.x - b.x, a.y - b.y); }
+v2 operator-=(v2& a, v2 b) { a = v2(a.x - b.x, a.y - b.y); return a; }
+v2 operator*(v2 a, float b) { return v2(a.x * b, a.y * b); }
+v2 operator*=(v2& a, float b) { a = v2(a.x * b, a.y * b); return a; }
+v2 operator/(v2 a, float b) { return v2(a.x / b, a.y / b); }
+v2 operator/=(v2& a, float b) { a = v2(a.x / b, a.y / b); return a; }
+{% endhighlight %}
+
+Our code is getting a bit big, so for now let's bundle things up into a header called `math_101.h`. We can place all of our math struct types like `v2`, `aabb`, and any other that come along later, along with associated math or drawing functions into this header. Here is our current version of `math_101.h`.
+
+{% highlight cpp %}
+#ifndef MATH_101_H
+#define MATH_101_H
+
+#include "tigr.h"
+
+struct v2
+{
+	v2() { }
+	v2(float x, float y) { this->x = x; this->y = y; }
+	float x;
+	float y;
+};
+
+v2 operator+(v2 a, v2 b) { return v2(a.x + b.x, a.y + b.y); }
+v2 operator+=(v2& a, v2 b) { a = v2(a.x + b.x, a.y + b.y); return a; }
+v2 operator-(v2 a, v2 b) { return v2(a.x - b.x, a.y - b.y); }
+v2 operator-=(v2& a, v2 b) { a = v2(a.x - b.x, a.y - b.y); return a; }
+v2 operator*(v2 a, float b) { return v2(a.x * b, a.y * b); }
+v2 operator*=(v2& a, float b) { a = v2(a.x * b, a.y * b); return a; }
+v2 operator/(v2 a, float b) { return v2(a.x / b, a.y / b); }
+v2 operator/=(v2& a, float b) { a = v2(a.x / b, a.y / b); return a; }
+float len(v2 v) { return sqrtf(v.x * v.x + v.y * v.y); }
+
+struct aabb
+{
+	aabb() { }
+	aabb(v2 min, v2 max) { this->min = min; this->max = max; }
+	v2 min;
+	v2 max;
+};
+
+float width(aabb box) { return box.max.x - box.min.x; }
+float height(aabb box) { return box.max.y - box.min.y; }
+v2 center(aabb box) { return (box.min + box.max) * 0.5f; }
+
+Tigr* screen;
+
+v2 world_to_screen(v2 p)
+{
+	p.y = -p.y;
+	float half_screen_width = 640.0f / 2.0f;
+	float half_screen_height = 480.0f / 2.0f;
+	p.x += half_screen_width;
+	p.y += half_screen_height;
+	return p;
+}
+
+void draw_point(v2 p, TPixel color)
+{
+	p = world_to_screen(p);
+	tigrPlot(screen, (int)p.x, (int)p.y, color);
+}
+
+void draw_line(v2 a, v2 b, TPixel color)
+{
+	a = world_to_screen(a);
+	b = world_to_screen(b);
+	tigrLine(screen, (int)a.x, (int)a.y, (int)b.x, (int)b.y, color);
+}
+
+void draw_box(aabb box, TPixel color)
+{
+	float w = width(box) + 1;
+	float h = height(box) + 1;
+	draw_line(box.min, box.min + v2(w, 0), color);
+	draw_line(box.min, box.min + v2(0, h), color);
+	draw_line(box.max, box.max - v2(w, 0), color);
+	draw_line(box.max, box.max - v2(0, h), color);
+}
+
+TPixel color_white() { return tigrRGB(0xFF, 0xFF, 0xFF); }
+TPixel color_black() { return tigrRGB(0, 0, 0); }
+TPixel color_red() { return tigrRGB(0xFF, 0, 0); }
+TPixel color_green() { return tigrRGB(0, 0xFF, 0); }
+TPixel color_blue() { return tigrRGB(0, 0, 0xFF); }
+
+#endif // MATH_101_H
+{% endhighlight %}
+
+And our current `main.cpp` program.
+
+{% highlight cpp %}
+#include <math.h>
+#include "tigr.h"
+#include "math_101.h"
+
+int main()
+{
+	screen = tigrWindow(640, 480, "Math 101", 0);
+
+	aabb red_box = aabb(v2(-50, -50), v2(50, 50));
+	aabb blue_box = aabb(v2(-50, -50), v2(50, 50));
+	while (!tigrClosed(screen) && !tigrKeyDown(screen, TK_ESCAPE)) {
+		float dt = tigrTime();
+		tigrClear(screen, color_black());
+
+		red_box.min += v2(30.0f, 0) * dt;
+		red_box.max += v2(30.0f, 0) * dt;
+		blue_box.min += v2(0, 30.0f) * dt;
+		blue_box.max += v2(0, 30.0f) * dt;
+		draw_box(red_box, color_red());
+		draw_box(blue_box, color_blue());
+
+		tigrUpdate(screen);
+	}
+
+	tigrFree(screen);
+
+	return 0;
+}
+{% endhighlight %}
+
+When run it will show a red box traveling along our new x-axis starting at the origin, and a blue box traveling along the new y-axis at our new origin.
+
+![box_axes_visualize.gif](/assets/box_axes_visualize.gif)
+
+THIS POST IS A WIP
+
+I'LL ADD MORE SOON
+
+Topics to come:
+* dot product
+* skew
+* cross product
+* distance
+* bezier
+* safe inversion
+* rotation
+* matrices
+* easing functions
+* transforms
+* plane
+* rays/raycasting
+* basic collision detection
