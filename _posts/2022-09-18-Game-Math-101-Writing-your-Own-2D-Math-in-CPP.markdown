@@ -811,7 +811,7 @@ v2 rotate(v2 v, float a)
 
 The first step to understanding rotations is to understand sin and cos functions. For a quick refresher I recommend this page over at [mathisfun on the unit circle](https://www.mathsisfun.com/geometry/unit-circle.html).
 
-![box_axes_visualize.gif](/assets/box_axes_visualize.gif)
+![unit_circle.png](/assets/unit_circle.png)
 
 For any vector on the unit circle its length is 1. We can calculate the x and y components of this unit vector with the sin and cos function by providing the angle in radians.
 
