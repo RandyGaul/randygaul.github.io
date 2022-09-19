@@ -825,15 +825,12 @@ v2 vector_on_unit_circle_from_angle(float radians)
 We can think of this as rotating the x-axis (1, 0) by an angle `a` (remember, when writing code `cosf` and `sinf` functions work in radians mode). Similarly, we can think about how to rotate the y-axis by the same angle `a`, and we would get a similar result of (-sin(a), cos(a)). One way to realize this is from a useful function called `skew`.
 
 {% highlight cpp %}
-v2 skew(v2 a)
-{
-	return v2(-a.y, a.x);
-}
+v2 skew(v2 a) { return v2(-a.y, a.x); }
 {% endhighlight %}
 
 ![skew_2d.png](/assets/skew_2d.png)
 
-It returns vector `a` rotated by 90 degrees counter-clockwise. So to to rotate a vector 90 degrees counter-clockwise we flip the x and y components, and negate the x final component. It comes from the concept of a skew-symmetric matrix, one that can [perform a cross-product](https://en.wikipedia.org/wiki/Skew-symmetric_matrix#Cross_product). We won't really go over this, I'm just mentioning it for anyone curious what the name means.
+It returns vector `a` rotated by 90 degrees counter-clockwise. To rotate a vector 90 degrees counter-clockwise we flip the x and y components, and negate the x final component. It comes from the concept of a skew-symmetric matrix, one that can [perform a cross-product](https://en.wikipedia.org/wiki/Skew-symmetric_matrix#Cross_product). We won't really go over this, I'm just mentioning it for anyone curious what the name means.
 
 As it turns out, whenever we write down any vector, a such as (1, 2) or (10, -13) we are using what's called a [basis](https://en.wikipedia.org/wiki/Basis_(linear_algebra)), or a [space](https://findnerd.com/list/view/Computer-Graphics-Different-Spaces/6982/). Our vectors are not merely (1, 2) or (10, -13), they are actually expressed as multipliers of the x and y axes.
 
@@ -857,7 +854,7 @@ Seems pretty silly, right? All that extra work for nothing! Well, when we think 
 
 ![basis_rotation.png](/assets/basis_rotation.png)
 
-Let's use the terms i and j for represnting a number relative to a basis. Taking our example vector of (10, -13) we can write it down as it would be shown in left-hand diagram as 10 * i + -13 * j. So what would i and j be for the rotated basis (x', 0) + (0, y') by and angle `a`? From our understanding of the unit circle the x-axis would be (cos(a), sin(a)). We can use this for our i vector. To get the j vector we rotate the x-axis by 90 degrees counter-clockwise using our skew function and get (-sin(a), cos(a)). To represent (10, -13) relative to our new i and j vectors we just use the formula from earlier.
+Let's use the terms i and j for representing a number relative to a basis. Taking our example vector of (10, -13) we can write it down as it would be shown in left-hand diagram as 10 * i + -13 * j. So what would i and j be for the rotated basis (x', 0) + (0, y') by and angle `a`? From our understanding of the unit circle the x-axis would be (cos(a), sin(a)). We can use this for our i vector. To get the j vector we rotate the x-axis by 90 degrees counter-clockwise using our skew function and get (-sin(a), cos(a)). To represent (10, -13) relative to our new i and j vectors we just use the formula from earlier.
 
 ```
 10 * i + -13 * j
@@ -961,7 +958,124 @@ int main()
 
 ![spokes.gif](/assets/spokes.gif)
 
-### Vector Drawing Function
+### Vector Drawing Function, Scaling, and Unit Vectors + Normalization
+
+You must have this super useful vector drawing function in your rendering arsenal. Used to visualize vectors at a specific location (remember, a vector is merely a direction, as drawing a vector must happen at a location), the vector drawing function can save us from many headaches down the line whenever we must debug our code and figure out what's going on.
+
+By taking an input vector and position we can draw an arrow shape on the screen. The arrowhead will show us which way the vector is facing. We can provide a scale factor to the function to adjust the size of the arrowhead. The way it works is we calculate by-hand the arrow's position when it's sitting along the x-axis. Using our newfound knowledge on rotations we can then rotate all of the points that define the arrow about the origin, and then translate them to the position as a final step. Remember, *rotations always happen about the origin*. If we translate first then rotate the results will be wrong. I encourage you to try this out as an experiment and see what it looks like!
+
+We need some help from a helpful function called [atan2](https://en.wikipedia.org/wiki/Atan2), the function used to compute the angle from the x-axis to a vector.
+
+![atan2.png](/assets/atan2.png)
+
+Since atan2 returns a number from pi to -pi it's often helpful to remap this from 0 to 2 * pi by adding pi to the result of atan2. Let's implement a few overloads for our own `atan2_360` function, which returns a value from 0 to 2 * pi (or 360 degrees). It's definitely appropriate to black-box the atan2 function and not worry too much about how it works.
+
+{% highlight cpp %}
+float atan2_360(float y, float x) { return atan2f(-y, -x) + 3.14159265f; }
+float atan2_360(rotation r) { return atan2_360(r.s, r.c); }
+float atan2_360(v2 v) { return atan2f(-v.y, -v.x) + 3.14159265f; }
+{% endhighlight %}
+
+{% highlight cpp %}
+void draw_vector(v2 p, v2 v, TPixel color)
+{
+	v2 arrow[] = {
+		v2(0.0f, 0.0f),
+		v2(-5.0f, 5.0f),
+		v2(0.0f, 0.0f),
+		v2(-5.0f, -5.0f),
+	};
+	rotation r = sincos(atan2_360(v));
+	for (int i = 0; i < 4; ++i) {
+		arrow[i] = mul(r, arrow[i]);
+		arrow[i] += p + v;
+	}
+	draw_line(arrow[0], arrow[1], color);
+	draw_line(arrow[2], arrow[3], color);
+	draw_line(p, p + v, color);
+}
+{% endhighlight %}
+
+![draw_arrow.png](/assets/draw_arrow.png)
+
+However, we can optimize the `draw_vector` function by not using atan2 at all. We can calculate the rotation directly with a little bit of math. Using the knowledge from the previous section about rotations we can just write down the formula for sin and cos values needed to rotate the x-axis to an any vector without calling into `cosf`, `sinf` or `atan2f`.
+
+Recall from the previous section on rotations for how to rotate the x-axis by an angle.
+
+```
+x = (1, 0) // The x-axis.
+a = angle
+x' = (1 * cos(a) - 0 * sin(a), 1 * sin(a) + 0 * cos(a))
+```
+
+We already know x', it's the `v` vector we want to draw. We can see that v.x = cos(a) and v.y = sin(a). Since we already know sin(a) and cos(a) we can skip atan2 and directly create a rotation. However, our function `draw_vector` works with non-unit vectors `v`. We can deal with non-unit vectors (vectors whose lengths are not 1) by normalizing the v. Normalization is the process of computing a vector's length then dividing the vector by the length. This returns a unit vector pointing in the direction the original vector was pointing. Let's call it `norm` for shorthand.
+
+{% highlight cpp %}
+v2 norm(v2 v) { float l = len(v); return v * (1.0f / l); }
+{% endhighlight %}
+
+We can normalize v before grabbing it's x and y components and treating them as sin/cos values.
+
+{% highlight cpp %}
+// In math_101.h ...
+struct rotation
+{
+	// Add some constructors here.
+	rotation() { }
+	rotation(float angle) { s = sinf(angle); c = sinf(angle); }
+	rotation(float s, float c) { this->s = s; this->c = c; }
+	float s;
+	float c;
+};
+
+// In draw.h ...
+void draw_vector(v2 p, v2 v, TPixel color)
+{
+	v2 arrow[] = {
+		v2(0.0f, 0.0f),
+		v2(-5.0f, 5.0f),
+		v2(0.0f, 0.0f),
+		v2(-5.0f, -5.0f),
+	};
+	v2 n = norm(v);
+	rotation r = rotation(n.y, n.x);
+	for (int i = 0; i < 4; ++i) {
+		arrow[i] = mul(r, arrow[i]);
+		arrow[i] += p + v;
+	}
+	draw_line(arrow[0], arrow[1], color);
+	draw_line(arrow[2], arrow[3], color);
+	draw_line(p, p + v, color);
+}
+{% endhighlight %}
+
+Congratulations! You just optimized away an `atan2f`, `sinf` and `cosf` calls and replaced them with a single `sqrtf` call (inside of our `len` and `norm` functions)!
+
+The final thing we can change is adding in a scale value. Recall from earlier that scaling a vector is merely multiplying it's components by the scale factor. Sear this rule into your brain: *scaling happens about the origin*. Period. If you wish to scale about another point simply translate to the origin first, then translate back after.
+
+{% highlight cpp %}
+void draw_vector(v2 p, v2 v, TPixel color, float scale = 5.0f)
+{
+	v2 arrow[] = {
+		v2(0.0f, 0.0f),
+		v2(-1.0f, 1.0f),
+		v2(0.0f, 0.0f),
+		v2(-1.0f, -1.0f),
+	};
+	v2 n = norm(v);
+	rotation r = rotation(n.y, n.x);
+	for (int i = 0; i < 4; ++i) {
+		arrow[i] *= scale;           // Scale first (about the origin).
+		arrow[i] = mul(r, arrow[i]); // Then rotate (about the origin).
+		arrow[i] += p + v;           // And finally translate.
+	}
+	draw_line(arrow[0], arrow[1], color);
+	draw_line(arrow[2], arrow[3], color);
+	draw_line(p, p + v, color);
+}
+{% endhighlight %}
+
+This function scales the arrowhead about the origin, then rotate's about the origin, and finally translates.
 
 THIS POST IS A WIP
 
