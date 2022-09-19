@@ -792,9 +792,9 @@ When run it will show a red box traveling along our new x-axis starting at the o
 
 ![box_axes_visualize.gif](/assets/box_axes_visualize.gif)
 
-From here on when we write new math code you can follow along and place it into the `math_101.h` header! The red box is traveling at 30 pixels per second. We can see this from the expression `v2(30.0f, 0) * dt`. Whenever we multiply something by dt, it can be read like "over one second". In this case it's 30 pixels per second.
+From here on when we write new math code you can follow along and place it into the `math_101.h` header! Drawing related functions can go into `draw.h`. The red box is traveling at 30 pixels per second. We can see this from the expression `v2(30.0f, 0) * dt`. Whenever we multiply something by dt, it can be read like "over one second". In this case it's 30 pixels per second.
 
-> NOTE: Those more familiar with C might notice no include guards were used. Don't worry about this for, we'll cover it later. For now it's more important to just focus on the math and pump out more code. Our program is just one-file conceptually, and we're only splitting it up into different files to make following this article easier.
+> NOTE: Those more familiar with C might notice no include guards were used. Don't worry about this for now, we'll cover it later. For now it's more important to just focus on the math and pump out more code. Our program is just one-file conceptually, and we're only splitting it up into different files to make following this article easier.
 
 ### Rotations
 
