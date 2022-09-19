@@ -831,7 +831,7 @@ v2 skew(v2 a)
 }
 {% endhighlight %}
 
-![skew_2d.png](/assets/skew_2d.gif)
+![skew_2d.png](/assets/skew_2d.png)
 
 It returns vector `a` rotated by 90 degrees counter-clockwise. So to to rotate a vector 90 degrees counter-clockwise we flip the x and y axes, and negate the x-axis. It comes from the concept of a skew-symmetric matrix, one that can [perform a cross-product](https://en.wikipedia.org/wiki/Skew-symmetric_matrix#Cross_product). We won't really go over this, I'm just mentioning it for anyone curious what the name means.
 
@@ -855,7 +855,7 @@ And that gets us back to where we started.
 
 Seems pretty silly, right? All that extra work for nothing! Well, when we think about rotations we're actually rotating the entire coordinate system. The coordinate system (the [cartesian grid](https://en.wikipedia.org/wiki/Cartesian_coordinate_system) we talked about earlier) is defined by the x-axis and the y-axis, so we're actually rotating these two axes when we do a rotation.
 
-![basis_rotation.png](/assets/basis_rotation.gif)
+![basis_rotation.png](/assets/basis_rotation.png)
 
 Let's use the terms i and j for represnting a number relative to a basis. Taking our example vector of (10, -13) we can write it down as it would be shown in left-hand diagram as 10 * i + -13 * j. So what would i and j be for the rotated basis (x', 0) + (0, y') by and angle `a`? From our understanding of the unit circle the x-axis would be (cos(a), sin(a)). We can use this for our i vector. To get the j vector we rotate the x-axis by 90 degrees counter-clockwise using our skew function and get (-sin(a), cos(a)). To represent (10, -13) relative to our new i and j vectors we just use the formula from earlier.
 
