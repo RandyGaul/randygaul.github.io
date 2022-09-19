@@ -833,7 +833,7 @@ v2 skew(v2 a)
 
 ![skew_2d.png](/assets/skew_2d.png)
 
-It returns vector `a` rotated by 90 degrees counter-clockwise. So to to rotate a vector 90 degrees counter-clockwise we flip the x and y axes, and negate the x-axis. It comes from the concept of a skew-symmetric matrix, one that can [perform a cross-product](https://en.wikipedia.org/wiki/Skew-symmetric_matrix#Cross_product). We won't really go over this, I'm just mentioning it for anyone curious what the name means.
+It returns vector `a` rotated by 90 degrees counter-clockwise. So to to rotate a vector 90 degrees counter-clockwise we flip the x and y components, and negate the x final component. It comes from the concept of a skew-symmetric matrix, one that can [perform a cross-product](https://en.wikipedia.org/wiki/Skew-symmetric_matrix#Cross_product). We won't really go over this, I'm just mentioning it for anyone curious what the name means.
 
 As it turns out, whenever we write down any vector, a such as (1, 2) or (10, -13) we are using what's called a [basis](https://en.wikipedia.org/wiki/Basis_(linear_algebra)), or a [space](https://findnerd.com/list/view/Computer-Graphics-Different-Spaces/6982/). Our vectors are not merely (1, 2) or (10, -13), they are actually expressed as multipliers of the x and y axes.
 
