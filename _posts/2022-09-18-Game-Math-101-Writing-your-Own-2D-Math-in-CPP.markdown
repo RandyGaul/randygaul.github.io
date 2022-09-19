@@ -675,14 +675,9 @@ v2 operator/(v2 a, float b) { return v2(a.x / b, a.y / b); }
 v2 operator/=(v2& a, float b) { a = v2(a.x / b, a.y / b); return a; }
 {% endhighlight %}
 
-Our code is getting a bit big, so for now let's bundle things up into a header called `math_101.h`. We can place all of our math struct types like `v2`, `aabb`, and any other that come along later, along with associated math or drawing functions into this header. Here is our current version of `math_101.h`.
+Our code is getting a bit big, so for now let's bundle things up into a header called `math_101.h`. We can place all of our math struct types like `v2`, `aabb`, and any other that come along later. Here is our current version of `math_101.h`.
 
 {% highlight cpp %}
-#ifndef MATH_101_H
-#define MATH_101_H
-
-#include "tigr.h"
-
 struct v2
 {
 	v2() { }
@@ -712,7 +707,11 @@ struct aabb
 float width(aabb box) { return box.max.x - box.min.x; }
 float height(aabb box) { return box.max.y - box.min.y; }
 v2 center(aabb box) { return (box.min + box.max) * 0.5f; }
+{% endhighlight %}
 
+The drawing functions can be placed into a header file called `draw.h` that looks like this:
+
+{% highlight cpp %}
 Tigr* screen;
 
 v2 world_to_screen(v2 p)
@@ -753,16 +752,15 @@ TPixel color_black() { return tigrRGB(0, 0, 0); }
 TPixel color_red() { return tigrRGB(0xFF, 0, 0); }
 TPixel color_green() { return tigrRGB(0, 0xFF, 0); }
 TPixel color_blue() { return tigrRGB(0, 0, 0xFF); }
-
-#endif // MATH_101_H
 {% endhighlight %}
 
-And our current `main.cpp` program.
+And our current `main.cpp` program looks like this:
 
 {% highlight cpp %}
 #include <math.h>
 #include "tigr.h"
 #include "math_101.h"
+#include "draw.h"
 
 int main()
 {
@@ -793,6 +791,14 @@ int main()
 When run it will show a red box traveling along our new x-axis starting at the origin, and a blue box traveling along the new y-axis at our new origin.
 
 ![box_axes_visualize.gif](/assets/box_axes_visualize.gif)
+
+From here on when we write new math code you can follow along and place it into the `math_101.h` header! The red box is traveling at 30 pixels per second. We can see this from the expression `v2(30.0f, 0) * dt`. Whenever we multiply something by dt, it can be read like "over one second". In this case it's 30 pixels per second.
+
+> NOTE: Those more familiar with C might notice no include guards were used. Don't worry about this for, we'll cover it later. For now it's more important to just focus on the math and pump out more code. Our program is just one-file conceptually, and we're only splitting it up into different files to make following this article easier.
+
+### Rotations
+
+### Vector Drawing Function
 
 THIS POST IS A WIP
 
