@@ -798,6 +798,169 @@ From here on when we write new math code you can follow along and place it into 
 
 ### Rotations
 
+Rotations are actually much more easy to perform than they are to learn about. Here comes another one of those rules to burn into your mind: *rotations are always done about the origin*. This is the truth. Here is how we rotate a vector or point about the origin given an angle in [radians](https://mathworld.wolfram.com/Radian.html#:~:text=The%20radian%20is%20a%20unit,or%2057.).
+
+{% highlight cpp %}
+v2 rotate(v2 v, float a)
+{
+	float s = sinf(a);
+	float c = cosf(a);
+	return v2(c * b.x - s * b.y, s * b.x + c * b.y);
+}
+{% endhighlight %}
+
+The first step to understanding rotations is to understand sin and cos functions. For a quick refresher I recommend this page over at [mathisfun on the unit circle](https://www.mathsisfun.com/geometry/unit-circle.html).
+
+![box_axes_visualize.gif](/assets/box_axes_visualize.gif)
+
+For any vector on the unit circle its length is 1. We can calculate the x and y components of this unit vector with the sin and cos function by providing the angle in radians.
+
+{% highlight cpp %}
+v2 vector_on_unit_circle_from_angle(float radians)
+{
+	return v2(cosf(radians), sinf(radians));
+}
+{% endhighlight %}
+
+We can think of this as rotating the x-axis (1, 0) by an angle `a` (remember, when writing code `cosf` and `sinf` functions work in radians mode). Similarly, we can think about how to rotate the y-axis by the same angle `a`, and we would get a similar result of (-sin(a), cos(a)). One way to realize this is from a useful function called `skew`.
+
+{% highlight cpp %}
+v2 skew(v2 a)
+{
+	return v2(-a.y, a.x);
+}
+{% endhighlight %}
+
+![skew_2d.png](/assets/skew_2d.gif)
+
+It returns vector `a` rotated by 90 degrees counter-clockwise. So to to rotate a vector 90 degrees counter-clockwise we flip the x and y axes, and negate the x-axis. It comes from the concept of a skew-symmetric matrix, one that can [perform a cross-product](https://en.wikipedia.org/wiki/Skew-symmetric_matrix#Cross_product). We won't really go over this, I'm just mentioning it for anyone curious what the name means.
+
+As it turns out, whenever we write down any vector, a such as (1, 2) or (10, -13) we are using what's called a [basis](https://en.wikipedia.org/wiki/Basis_(linear_algebra)), or a [space](https://findnerd.com/list/view/Computer-Graphics-Different-Spaces/6982/). Our vectors are not merely (1, 2) or (10, -13), they are actually expressed as multipliers of the x and y axes.
+
+(1, 2) and (10, -13) aren't special vectors or anything, I just chose them as random examples.
+
+```
+10 * x-axis + -13 * y-axis
+```
+
+Thinking about how the x-axis is (1, 0) and the y-axis is (0, 1) we can substitute in these values (which are just 1).
+
+```
+10 * (1, 0) + -13 * (0, 1)
+=  (10 * 1, -13 * 1)
+=  (10, -13)
+```
+
+And that gets us back to where we started.
+
+Seems pretty silly, right? All that extra work for nothing! Well, when we think about rotations we're actually rotating the entire coordinate system. The coordinate system (the [cartesian grid](https://en.wikipedia.org/wiki/Cartesian_coordinate_system) we talked about earlier) is defined by the x-axis and the y-axis, so we're actually rotating these two axes when we do a rotation.
+
+![basis_rotation.png](/assets/basis_rotation.gif)
+
+Let's use the terms i and j for represnting a number relative to a basis. Taking our example vector of (10, -13) we can write it down as it would be shown in left-hand diagram as 10 * i + -13 * j. So what would i and j be for the rotated basis (x', 0) + (0, y') by and angle `a`? From our understanding of the unit circle the x-axis would be (cos(a), sin(a)). We can use this for our i vector. To get the j vector we rotate the x-axis by 90 degrees counter-clockwise using our skew function and get (-sin(a), cos(a)). To represent (10, -13) relative to our new i and j vectors we just use the formula from earlier.
+
+```
+10 * i + -13 * j
+i = (cos(a), sin(a))
+j = (-sin(a), cos(a))
+
+substitute in =>
+
+10 * (cos(a), sin(a))
+-13 * (-sin(a), cos(a)))
+```
+
+And there we have it! Rotating a vector by an angle is the same as expressing the vector in a rotated coordinate frame (or basis). We can rotate any vector by changing 10 and -13 to x and y input variables to arrive back at our original function.
+
+{% highlight cpp %}
+v2 rotate(v2 v, float a)
+{
+	float s = sinf(a);
+	float c = cosf(a);
+	return v2(c * b.x - s * b.y, s * b.x + c * b.y);
+}
+{% endhighlight %}
+
+If this was all over your head don't sweat it. You can just use the `rotate` function as a black-box without understanding the internals and that's a totally valid way to make games. As long as you memorize the rules you'll be good to go, such as the rule we mentioned at the beginning of this section: *rotations are always performed about the origin*.
+
+But what if we want to rotate around some other point? For example say we want to create a special effect where a ball of light is circling around an enemy somewhere on the screen other than the origin? It turns out there's a very simple solution. Just translate the enemy's location to the origin, apply the rotation, then translate back.
+
+{% highlight cpp %}
+v2 rotate_point_a_around_point_b(v2 a, v2 b, float radians)
+{
+	// Compute cosine and sine values for our i and j vectors.
+	float c = cosf(radians);
+	float s = sinf(radians);
+
+	// Translate so that b is the origin.
+	a = a - b; 
+
+	// Rotate a around the origin.
+	// a' = a.x * i + a.y * j
+	// where i = (c, s), j = (-s, c)
+	// substitute =>
+	// a' = a.x * (c, s) + a.y * (-s, c)
+	a = v2(c * a.x - s * a.y, s * a.x + c * a.y);
+
+	// Translate back to b.
+	return a + b;
+}
+{% endhighlight %}
+
+The functions `cosf` and `sinf` are quite fast on modern processors, but still should be thought of as an order of magnitude (10x) slower than a normal float multiply. Therefor it's going to be preferable to precompute these values whenever we can and store them. A good way for our math library to make use of rotations is to make a struct representing a rotation. It can be multiplied with vectors to rotate them by an angle.
+
+{% highlight cpp %}
+struct rotation
+{
+	float s;
+	float c;
+};
+
+rotation sincos(float a) { rotation r; r.c = cosf(a); r.s = sinf(a); return r; }
+v2 mul(rotation a, v2 b) { return v2(a.c * b.x - a.s * b.y, a.s * b.x + a.c * b.y); }
+{% endhighlight %}
+
+We can build a `rotation` by calling `sincos`, and then rotate a vector with it by calling `mul`. Alternatively you could implement an `operator*` to perform rotations, however I recommend using a `mul` function for a few reasons.
+
+* `mul` can be easily overloaded without modifying the "class definition". Just simply add more `mul` functions later on for different kinds of operations.
+* Post-multiplication or pre-multiplication (e.g. 5 * x vs x * 5) can be expressed in a more explicit manner. For example if we write a * b * c, what is the order of operations supposed to be? Of course the C/C++ programming languages clearly define the order of operations, but if we're writing down hand-written math notes and want to transcribe it into code, it's in my opinion more clear what the intent is if we write down mul(a, mul(b, c)) or mul(mul(a, b), c). This distinction matters a lot later down the line when we are dealing with transforms and matrices, where multiplication is [non-commutative](https://en.wikipedia.org/wiki/Commutative_property).
+
+It's time to throw our rotation functions into practice and generate a bunch lines rotated around the origin like the spokes of a bicycle wheel.
+
+{% highlight cpp %}
+#include <math.h>
+#include "tigr.h"
+#include "math_101.h"
+#include "draw.h"
+
+int main()
+{
+	screen = tigrWindow(640, 480, "Math 101", 0);
+
+	float t = 0;
+	while (!tigrClosed(screen) && !tigrKeyDown(screen, TK_ESCAPE)) {
+		float dt = tigrTime();
+		t += dt;
+		tigrClear(screen, color_black());
+
+		v2 p = v2(100.0f, 0);
+		rotation r = sincos(t * 0.01f);
+		for (int i = 0; i < 32; ++i) {
+			draw_line(v2(0, 0), p, color_white());
+			p = mul(r, p);
+		}
+
+		tigrUpdate(screen);
+	}
+
+	tigrFree(screen);
+
+	return 0;
+}
+{% endhighlight %}
+
+![spokes.gif](/assets/spokes.gif)
+
 ### Vector Drawing Function
 
 THIS POST IS A WIP
