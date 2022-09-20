@@ -1397,6 +1397,293 @@ v2 intersect(halfspace h, v2 q, v2 p)
 }
 {% endhighlight %}
 
+### Bezier Curves and Lerp
+
+[Lerp](https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/a-brief-introduction-to-lerp-r4954/) stands for linear interpolation. It means picking a number between two endpoints (a and b) based on a t value. Usually t is a value from 0 to 1. If t is 0 then you get a, otherwise if 1 you get b. Wikipedia has these three excellent images of lerping and bezier curves. The values of t are animating from 0 to 1, and lerp/bezier functions are used on input points p0 through p3 to move a point along a bezier curve.
+
+{% highlight cpp %}
+float lerp(float a, float b, float t) { return a + (b - a) * t; }
+v2 lerp(v2 a, v2 b, float t) { return a + (b - a) * t; }
+{% endhighlight %}
+
+![bezier1.gif](/assets/bezier1.gif)
+
+A quadratic bezier curve is just lerping between two other lerps.
+
+{% highlight cpp %}
+v2 bezier(v2 a, v2 b, v2 c, float t)
+{
+	v2 d = lerp(a, b, t);
+	v2 e = lerp(b, c, t);
+	return lerp(d, e, t);
+}
+{% endhighlight %}
+
+![bezier2.gif](/assets/bezier2.gif)
+
+And similarly a cubic bezier curve is just lerping between two quadratic bezier curves.
+
+{% highlight cpp %}
+v2 bezier(v2 a, v2 b, v2 c, v2 d, float t)
+{
+	v2 e = bezier(a, b, c, t);
+	v2 f = bezier(b, c, d, t);
+	return lerp(e, f, t);
+}
+{% endhighlight %}
+
+![bezier3.gif](/assets/bezier3.gif)
+
+These are useful for animating all kinds of effects in your game, such as roller coasters, transitions from here to there, missiles, grass blowing in the wind, wires hanging from telephone poles.
+
+As an optimization these functions can be refactored into forms where redundant calulcations are done up-front and then reused as much as possible. It's easiest to figure out how to reduce redundant terms through algebra.
+
+The first step is to unwind the lerps into their raw form.
+
+{% highlight cpp %}
+v2 bezier(v2 a, v2 b, v2 c, float t)
+{
+	v2 d = lerp(a, b, t);
+	v2 e = lerp(b, c, t);
+	return lerp(d, e, t);
+}
+
+// -->
+
+v2 bezier(v2 a, v2 b, v2 c, float t)
+{
+	v2 d = a + (b - a) * t;
+	v2 e = b + (c - b) * t;
+	return d + (e - d) * t;
+}
+{% endhighlight %}
+
+Then take the algebraic pain of reducing common terms.
+
+```
+d = a + bt - at
+e = b + ct - bt
+    d + et - dt
+
+a - at = a(1-t)
+=>
+
+d = a(1-t) + bt
+e = b(1-t) + ct
+    d(1-t) + et
+
+Combine into a big formula by substituting in terms over and over
+=>
+
+   d(1-t) + et
+= (a(1-t) + bt)(1-t) + (b(1-t) + ct)t
+
+Notice that 1-t is used a lot, combine all the terms possible
+=>
+
+u = 1-t
+= (au + bt)u + (bu + ct)t
+= auu + but + but + ctt
+= auu + but2 + ctt
+```
+
+{% highlight cpp %}
+v2 bezier(v2 a, v2 b, v2 c, float t)
+{
+	float u = 1.0f - t;
+	float ut = u * t;
+	v2 auu = a * u * u;
+	v2 but2 = b * ut * 2.0f;
+	v2 ctt = c * t * t;
+	return auu + but2 + ctt;
+}
+{% endhighlight %}
+
+And here's a demonstration program to draw a quadratic bezier curve, and also animate a box over moving over it back and forth.
+
+{% highlight cpp %}
+#include <math.h>
+#include "tigr.h"
+#include "math_101.h"
+#include "draw.h"
+
+#include <stdio.h>
+
+int main()
+{
+	screen = tigrWindow(640, 480, "Math 101", 0);
+
+	float t = 0;
+	while (!tigrClosed(screen) && !tigrKeyDown(screen, TK_ESCAPE)) {
+		float dt = tigrTime();
+		t += dt;
+		tigrClear(screen, color_black());
+
+		v2 a = v2(-100, 0);
+		v2 b = v2(-100, 100);
+		v2 c = v2(100, 50);
+
+		float t0 = 0;
+		for (int i = 0; i <= 30; ++i) {
+			float t1 = (float)i / 30.0f;
+			v2 p0 = bezier(a, b, c, t0);
+			v2 p1 = bezier(a, b, c, t1);
+			draw_line(p0, p1, color_white());
+			t0 = t1;
+		}
+
+		float pt = (cosf(t) + 1.0f) * 0.5f;
+		v2 box_center = bezier(a, b, c, pt);
+		draw_box(aabb(box_center - v2(10, 10), box_center + v2(10, 10)), color_white());
+
+		tigrUpdate(screen);
+	}
+
+	tigrFree(screen);
+
+	return 0;
+}
+{% endhighlight %}
+
+![quadratic_bezier.gif](/assets/quadratic_bezier.gif)
+
+We can also do this for the cubic bezier function. I personally do this by unwinding the calls to get all the lerps.
+
+{% highlight cpp %}
+v2 bezier(v2 a, v2 b, v2 c, v2 d, float t)
+{
+	v2 e = bezier(a, b, c, t);
+	v2 f = bezier(b, c, d, t);
+	return lerp(e, f, t);
+}
+
+// -->
+
+v2 bezier(v2 a, v2 b, v2 c, v2 d, float t)
+{
+	v2 e = lerp(a, b, t);
+	v2 f = lerp(b, c, t);
+	v2 g = lerp(c, d, t);
+	v2 h = lerp(e, f, t);
+	v2 i = lerp(f, g, t);
+	return lerp(h, i, t);
+}
+{% endhighlight %}
+
+The next step is to unwind the lerps into their raw form.
+
+{% highlight cpp %}
+v2 bezier(v2 a, v2 b, v2 c, v2 d, float t)
+{
+	v2 e = a + (b - a) * t;
+	v2 f = b + (c - b) * t;
+	v2 g = c + (d - c) * t;
+	v2 h = e + (f - e) * t;
+	v2 i = f + (g - f) * t;
+	return h + (i - h) * t;
+}
+{% endhighlight %}
+
+Then take the algebraic pain of reducing common terms.
+
+```
+e = a + bt - at
+f = b + ct - bt
+g = c + dt - ct
+h = e + ft - et
+i = f + gt - ft
+    h + it - ht
+
+a - at = a(1-t)
+=>
+
+e = a(1-t) + bt
+f = b(1-t) + ct
+g = c(1-t) + dt
+h = e(1-t) + ft
+i = f(1-t) + gt
+    h(1-t) + it
+
+Combine into a big formula by substituting in terms over and over
+=>
+
+  h(1-t) + it
+= (e(1-t) + ft)(1-t) + (f(1-t) + gt)t
+= ((a(1-t) + bt)(1-t) + (b(1-t) + ct)t)(1-t) + ((b(1-t) + ct)(1-t) + (c(1-t) + dt)t)t
+
+Notice that 1-t is used a lot, combine all the terms possible
+=>
+
+u = 1-t
+= ((au + bt)u + (bu + ct)t)u + ((bu + ct)u + (cu + dt)t)t
+= auuu + buut + buut + cutt + buut + cutt + cutt + dttt
+= auuu + buut3 + cutt3 + dttt
+```
+
+{% highlight cpp %}
+v2 bezier(v2 a, v2 b, v2 c, v2 d, float t)
+{
+	float u = 1 - t;
+	float tt = t * t;
+	float uu = u * u;
+	v2 auuu = a * uu * u;
+	v2 buut3 = b * uu * t * 3.0f;
+	v2 cutt3 = c * u * tt * 3.0f;
+	v2 dttt = d * tt * t;
+	return auuu + buut3 + cutt3 + dttt;
+}
+{% endhighlight %}
+
+![cubic_bezier.gif](/assets/cubic_bezier.gif)
+
+{% highlight cpp %}
+#include <math.h>
+#include "tigr.h"
+#include "math_101.h"
+#include "draw.h"
+
+#include <stdio.h>
+
+int main()
+{
+	screen = tigrWindow(640, 480, "Math 101", 0);
+
+	float t = 0;
+	while (!tigrClosed(screen) && !tigrKeyDown(screen, TK_ESCAPE)) {
+		float dt = tigrTime();
+		t += dt;
+		tigrClear(screen, color_black());
+
+		v2 a = v2(-100, 0);
+		v2 b = v2(-100, 100);
+		v2 c = v2(100, 50);
+		v2 d = v2(200, -100);
+
+		float t0 = 0;
+		for (int i = 0; i <= 30; ++i) {
+			float t1 = (float)i / 30.0f;
+			v2 p0 = bezier(a, b, c, d, t0);
+			v2 p1 = bezier(a, b, c, d, t1);
+			draw_line(p0, p1, color_white());
+			t0 = t1;
+		}
+
+		float pt = (cosf(t) + 1.0f) * 0.5f;
+		printf("pt : %f\n", pt);
+		v2 box_center = bezier(a, b, c, d, pt);
+		draw_box(aabb(box_center - v2(10, 10), box_center + v2(10, 10)), color_white());
+
+		tigrUpdate(screen);
+	}
+
+	tigrFree(screen);
+
+	return 0;
+}
+{% endhighlight %}
+
+Just be careful with these optimized versions, because small values of u or t create numeric problems. If the numbers get too small you can end up with [denormalized numbers](https://en.wikipedia.org/wiki/Subnormal_number) or just numerically innaccurate results. The previous version using successive lerps or more numerically stable.
+
 THIS POST IS A WIP
 
 I'LL ADD MORE SOON
