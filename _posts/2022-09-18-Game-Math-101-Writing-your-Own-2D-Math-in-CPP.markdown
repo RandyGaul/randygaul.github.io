@@ -958,7 +958,7 @@ int main()
 
 ![spokes.gif](/assets/spokes.gif)
 
-### Vector Drawing Function, Scaling, and Unit Vectors + Normalization
+### Unit Vectors + Normalization
 
 You must have this super useful vector drawing function in your rendering arsenal. Used to visualize vectors at a specific location (remember, a vector is merely a direction, as drawing a vector must happen at a location), the vector drawing function can save us from many headaches down the line whenever we must debug our code and figure out what's going on.
 
