@@ -1252,6 +1252,53 @@ int main()
 
 ![angle_tracking.gif](/assets/angle_tracking.gif)
 
+### Distance and Planes
+
+A plane in 2D is just a line. A fancy name for a line. In 3D however, planes are like infinitely large flat sheets of paper. Another name for a plane is halfspace, because they slice all of space perfectly in half. All of these terms can be used interchangebly in 2D.
+
+You're probably familiar with the slope-form equation of a line.
+
+```
+y = mx + b
+```
+
+Where m is the slope factor, and b is the offset from the origin where the line crosses the y-axis. However, there's a couple different forms of the line equation. One is called the plane equation (my favorite).
+
+```
+ax + by - c = 0
+```
+
+![plane_equation.png](/assets/plane_equation.png)
+
+Where (a, b) is a vector called the plane normal, while (x, y) are parameters to uniquely identify any point on the plane. c is an offset from the origin, like a distance value of the plane from the origin (scaled by the length of normal (a, b)).
+
+Finally there's a parametric form which uses a single point on the line, and a vector to another point on the line.
+
+```
+p' = p + n * t
+```
+
+Where p' is any point on the plane, p is a given point on the plane, and t is a parameter to pick a unique point on the plane. My favorite format is the plane equation ax + by - c = 0, or ax + by = c. We can make a plane type in our code, though I'd recommend calling it halfspace. Reason being: plane is often used as an identifier in other areas of the code, so we probably can avoid clashes by calling it a halfspace instead.
+
+{% highlight cpp %}
+struct halfspace
+{
+	halfspace() { }
+	halfspace(v2 n, v2 p) { this->n = n; c = dot(n, p); }
+	halfspace(v2 n, float c) { this->n = n; this->c = c; }
+	v2 n;
+	float c;
+};
+{% endhighlight %}
+
+Here are some extremely useful operations you can do with planes.
+
+1. Compute the distance of a point to a plane.
+2. Project a point onto the surface of a plane.
+3. Compute the intersection of a line segment to a plane (raycast, more on this later).
+
+
+
 THIS POST IS A WIP
 
 I'LL ADD MORE SOON
