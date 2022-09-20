@@ -1729,7 +1729,17 @@ An extremely useful property of matrices is we can multiply two matrices togethe
 m2 mul(m2 a, m2 b) { m2 c; c.x = mul(a, b.x); c.y = mul(a, b.y); return c; }
 {% endhighlight %}
 
+The transpose of a matrix TODO - WORKING HERE
+
+Here are some notable properties of rotation matrices:
+
+1. non commutative
+2. transpose is the inverse
+
 Our 2x2 matrix, m2, can also encode a scaling factor along the x-axis or y-axis.
+
+1. commutative
+2. inverse flips the scale factor
 
 ## Transforms
 
