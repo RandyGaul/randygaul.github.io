@@ -1147,8 +1147,9 @@ If u is a unit vector and v is not, then `dot(u, v)` will return the distance in
 3. Given two vectors u and v, if u is unit (length of 1), then dot(u, v) == the distance v travels along u.
 4. If two vectors u and v are unit vectors, dot(u, v) == cos(angle between u and v).
 5. Given two vectors u and v, whether or not they are unit, sign(dot(u, v)) will tell you if the vectors are facing each other or away from each other.
+6. The dot product of perpendicular vectors is 0.
 
-The last point 5) begs some extra attention. The sign function means like this:
+Point 5) begs some extra attention. The sign function means like this:
 
 {% highlight cpp %}
 float sign(float x) { return x > 0 ? 1.0f : -1.0f; }
@@ -1162,7 +1163,7 @@ float len_squared(v2 v) { return dot(v, v); }
 
 ### Cross Product (aka 2D Determinant)
 
-The cross product is the sibling of the dot product. It computes the sin of the angle between two vectors (scaled by the length of each vector), as opposed to the cos like the dot product. It looks quite similar, though we won't get into the derivation for the sake of brevity. In 2D games it's not quite as useful as the dot product, but does make its appearance occasionally.
+The cross product is the sibling of the dot product. It computes the sin of the angle between two vectors (scaled by the length of each vector), as opposed to the cos like the dot product. It looks quite similar, though we won't get into the derivation for the sake of brevity. In 2D games it's not quite as useful as the dot product, but does make its appearance occasionally. Note that the cross between two parallel vectors is 0.
 
 My favorite example would be a function to compute the angle between two vectors. Or more specifically, the shortest angle between two vectors. Using point 5) from the last section we can write a function called `shortest_arc` from two vectors a and b. It returns the smallest angle needed to rotate a to b. We will name the cross product `det2` for "determinant of a 2D matrix", which will make more sense later on.
 
@@ -1270,7 +1271,7 @@ ax + by - c = 0
 
 ![plane_equation.png](/assets/plane_equation.png)
 
-Where (a, b) is a vector called the plane normal, while (x, y) are parameters to uniquely identify any point on the plane. c is an offset from the origin, like a distance value of the plane from the origin (scaled by the length of normal (a, b)).
+Where (a, b) is a vector called the plane normal, while (x, y) are parameters to uniquely identify any point on the plane. c is an offset from the origin, like a distance value of the plane from the origin (scaled by the length of normal (a, b)). Often times the normal (a, b) is normalized to be a unit vector, this makes c the actual distance of the plane to the origin. In practice most times planes are used with unit normal vectors.
 
 Finally there's a parametric form which uses a single point on the line, and a vector to another point on the line.
 
@@ -1293,18 +1294,114 @@ struct halfspace
 
 Here are some extremely useful operations you can do with planes.
 
-1. Compute the distance of a point to a plane.
+1. Compute the distance of a point to a plane (or just see which side of a plane a point is by looking at the sign of the distance).
 2. Project a point onto the surface of a plane.
-3. Compute the intersection of a line segment to a plane (raycast, more on this later).
+3. Compute the intersection of a line to a plane (like a raycast, more on raycasting later).
 
+#### Distance Point to Plane
 
+First up is to compute the distance of a point to a plane. Let us assume the n vector of the plane is normalized. Simply plug the point into the plane equation.
+
+```
+distance of point p to a halfspace (plane)
+ax + by - c = 0
+=>
+n.x * p.x + n.y * p.y - c = distance
+```
+
+Note that the part n.x * p.x + n.y * p.y is a dot product. We can rewrite this as a dot product.
+
+```
+dot(n, p) - c = distance
+```
+
+And so we can write down a useful distance function for planes.
+
+{% highlight cpp %}
+float distance(halfspace h, v2 p) { return dot(h.n, p) - h.c; }
+{% endhighlight %}
+
+If the distance is positive then p is on the side of the plane the normal is facing, negative otherwise.
+
+#### Project Point onto Plane
+
+Projecting a point onto a plane means moving the point to the plane's surface by moving it the shortest distance possible. The shortest distance is along the plane's normal vector. Therefor all we do is compute the distance to the plane, then move the point along the normal by that negated distance.
+
+{% highlight cpp %}
+v2 project(halfspace h, v2 p) { return p - distance(h, p); }
+{% endhighlight %}
+
+#### Intersection of a Line and a Plane
+
+This one is also quite easy if you visualize it with a drawing, but there's also the algebraic derivation. Let's start with the algebra. Choosing the parametric form for a line is an easy way to do it. Just note [the dot product is bilinear](https://en.wikipedia.org/wiki/Dot_product#Properties).
+
+```
+line = p' = p + q * t
+plane = ax + by - c = 0, or in vector form dot(n, q) - c = 0 where q is an input point
+
+plug line equation into the plane equation
+solve for t
+=>
+dot(n, p + q * t) - c = 0
+dot(n, p) + t * dot(n, q) - c = 0
+t * dot(n, q) = c - dot(n, p)
+t = (c - dot(n, p)) / dot(n, q)
+
+plug our solution for t back into the line equation to calculate p'
+p' is the intersection point
+=>
+p' = p + q * t
+```
+
+{% highlight cpp %}
+v2 intersect(halfspace h, v2 p, v2 q)
+{
+	float t = (h.c - dot(h.n, p))) / dot(h.n, q);
+	return p + q * t;
+}
+{% endhighlight %}
+
+You'll have trouble if the denomitator is zero (divide by zero error), which can happen if the line is parallel to the plane (recall the dot product of vectors is zero if they are perpendicular).
+
+One thing to notice here is the numerator `c - dot(n, p)`. This is the distance function we wrote earlier! It's dividing the distance of the plane itself to the origin by the distance of p (the point on the line) to the origin. Recall: *dotting a point with a vector gives you the distance the point travels along the vector from the origin* (scaled by the vector's length, of course).
+
+Another way to figure out a solution is geometrically (just looking at the picture) if the line is given by two inputs points rather than parametric form (as in, the line that passes through both points).
+
+![p_q_plane.png](/assets/p_q_plane.png)
+
+The first term `dot(Q, n) - c` we can call dq standing for distance of q to the plane. Similarly we have dp for distance of p to the plane.
+
+{% highlight cpp %}
+v2 intersect(halfspace h, v2 q, v2 p)
+{
+	float dq = distance(h, q);
+	float dp = distance(h, p);
+	// ...
+}
+{% endhighlight %}
+
+Next is to notice we can move q along the vector p - q to find the intersection point. But by how much should we move q? We know it's some factor between the distance of p and q from the plane. Factor means a ratio or division operator. Therefor we can calculate how far along the plane's normal p - q travels, and multiply it by this ratio to compute the intersection.
+
+![line_plane_solution.png](/assets/line_plane_solution.png)
+
+Similarly this function will fail (divide by zero) if the line is parallel to the plane, seeing the denominator for dp - dq will be zero if they are equivalent.
+
+Another way of thinking about this is [lerping](https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/a-brief-introduction-to-lerp-r4954/) from p to q. We will cover lerping more in detail later. The t value for the lerp function would be `dq / (dq - dp)`.
+
+{% highlight cpp %}
+v2 intersect(halfspace h, v2 q, v2 p)
+{
+	float dq = distance(h, q);
+	float dp = distance(h, p);
+	return (p - q) * (dq / (dq - dp));
+}
+{% endhighlight %}
 
 THIS POST IS A WIP
 
 I'LL ADD MORE SOON
 
 Topics to come:
-* distance
 * bezier
 * safe inversion
 * rotation
