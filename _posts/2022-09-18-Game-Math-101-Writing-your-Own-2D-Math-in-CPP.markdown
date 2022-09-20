@@ -1679,10 +1679,64 @@ Just be careful with these optimized versions, because small values of u or t cr
 
 ## Matrices
 
+In game development matrices are mostly useful for representing transformations, namely scales, rotations and translations. In 3D graphics there's also some projection matrices, but we're sticking to 2D here. A matrix stores the information needed to perform a transformation upon vectors, such as placing an object into the world, or defining a relative position to another object.
+
+We will be using 2x2 matrices to represent rotations and scales, and later attach a position vector to create a 3x2 matrix to represent a full transform. A convenient way to look at a 2x2 matrix is like a collection of two vectors. Take a look at the matrix m.
+
+```
+u = (ux, uy)
+v = (vx, vy)
+m = [ux, vx]
+    [uy, vy]
+```
+
+Each column of m is a vector u or v. If this matrix is a rotation matrix, then u and v would be the basis vectors. u is the x-axis and v is the y-axis. When u and v are unit vectors we call m a rotation matrix. We've actually already been using rotation matrices without knowing, back in the rotation section of this article. Let's define our matrix struct type and a function to build a rotation matrix.
+
+{% highlight cpp %}
+struct m2
+{
+	v2 x;
+	v2 y;
+};
+
+m2 m2_rotation(float angle)
+{
+	float c = cosf(angle);
+	float s = sinf(angle);
+	m2 m;
+	m.x = v2(c, -s);
+	m.y = v2(s, c);
+	return m;
+}
+
+v2 mul(m2 m, v2 v) { return v2(m.x.x * v.x + m.y.x * v.y, m.x.y * v.x + m.y.y * v.y); }
+{% endhighlight %}
+
+The mul function is defined by [matrix multiplication rules](https://en.wikipedia.org/wiki/Matrix_multiplication).
+
+If you write down the operations by hand of multiplying a rotation matrix with a vector you'll find it to be identical to our mul function for rotations (sin + cos pair) and vectors.
+
+```
+rotation(a) = [cos(a), -sin(a)]
+              [cos(a),  sin(a)]
+```
+
+Matrix multiplication with vectors simply encodes a [linear combination](https://en.wikipedia.org/wiki/Linear_combination). Within that combination is our transformation (a rotation, scale, or mixture of both).
+
+An extremely useful property of matrices is we can multiply two matrices together to concatenate their operations. If we rotate clockwise a little, then rotate counter-clockwise a lot, then multiply these together we'd be left overall with a lesser counter-clockwise rotation. We can write down the matrix mul function with our matrix to vector mul function.
+
+{% highlight cpp %}
+m2 mul(m2 a, m2 b) { m2 c; c.x = mul(a, b.x); c.y = mul(a, b.y); return c; }
+{% endhighlight %}
+
+Our 2x2 matrix, m2, can also encode a scaling factor along the x-axis or y-axis.
+
 ## Transforms
 
 ## Raycasting
 
 ## Collision Detection Basics
+
+## Numeric Stability
 
 THIS POST IS A WIP
