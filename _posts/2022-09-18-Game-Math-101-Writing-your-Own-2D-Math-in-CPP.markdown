@@ -1140,19 +1140,123 @@ float dot(v2 a, v2 b) { return a.x * b.x + a.y * b.y; }
 float len(v2 v) { return sqrtf(dot(v, v)); }
 {% endhighlight %}
 
-If u is a unit vector and v is not, then `dot(u, v)` will return the distance in which v travels in the u direction. We will make prolific use of the dot product later!
+If u is a unit vector and v is not, then `dot(u, v)` will return the distance in which v travels in the u direction. We will make prolific use of the dot product later! Here are the footnotes of some useful dot product properties:
+
+1. The dot product is commutative! dot(a, b) == dot(b, a).
+2. You can algebraically manipulate scalars in and out of dot products. Example: given two vectors a and b, and a scalar s, we can see: s * dot(a, b) == dot(s * a, s * b).
+3. Given two vectors u and v, if u is unit (length of 1), then dot(u, v) == the distance v travels along u.
+4. If two vectors u and v are unit vectors, dot(u, v) == cos(angle between u and v).
+5. Given two vectors u and v, whether or not they are unit, sign(dot(u, v)) will tell you if the vectors are facing each other or away from each other.
+
+The last point 5) begs some extra attention. The sign function means like this:
+
+{% highlight cpp %}
+float sign(float x) { return x > 0 ? 1.0f : -1.0f; }
+{% endhighlight %}
+
+If the sign of dot(u, v) is positive the vectors are facing in the same direction. If dot(u, v) is negative, the vectors are facing away from each other! Therefor it's quite useful to have a `len_squared` function laying around that skips the `sqrtf` function; if you only need to check the sign then it's totally fine if the resulting angle is scaled.
+
+{% highlight cpp %}
+float len_squared(v2 v) { return dot(v, v); }
+{% endhighlight %}
 
 ### Cross Product (aka 2D Determinant)
 
+The cross product is the sibling of the dot product. It computes the sin of the angle between two vectors (scaled by the length of each vector), as opposed to the cos like the dot product. It looks quite similar, though we won't get into the derivation for the sake of brevity. In 2D games it's not quite as useful as the dot product, but does make its appearance occasionally.
 
+My favorite example would be a function to compute the angle between two vectors. Or more specifically, the shortest angle between two vectors. Using point 5) from the last section we can write a function called `shortest_arc` from two vectors a and b. It returns the smallest angle needed to rotate a to b. We will name the cross product `det2` for "determinant of a 2D matrix", which will make more sense later on.
+
+{% highlight cpp %}
+float det2(v2 a, v2 b) { return a.x * b.y - a.y * b.x; }
+{% endhighlight %}
+
+{% highlight cpp %}
+float shortest_arc(v2 a, v2 b)
+{
+	a = norm(a);
+	b = norm(b);
+	float c = dot(a, b);
+	float s = det2(a, b);
+	float theta = acosf(c);
+	if (s > 0) {
+		return theta;
+	} else {
+		return -theta;
+	}
+}
+{% endhighlight %}
+
+First we use the dot product to compute cos(theta), where theta is the angle between a and b. Unfortunately the function cos mere returns a number from -1 to 1, and that's it. It's just one angle. *We don't know which side of a that b points to*.
+
+![dot_sides_same.png](/assets/dot_sides_same.png)
+
+In the above picture the u vector is reflected perfectly across the v vector. In both cases the dot product will return the same value, because the angle is the same in both cases! Luckily we can use det2 in a very similar way to the dot product. We can look at the sign of the cross product to see if the vector u is pointing to the left (counter-clockwise) or the right (clockwise) of the vector v. Be careful about operator order though, as det2(u, v) is not the same as det2(v, u) -- in fact the sign will be flipped in these cases!
+
+By checking the sin of det2 we know which side b is from a, wich determines the sign of the cos(theta) to resolve the mirroring issue. Please note that if you know a and b are unit vectors then the norm function calls do not need to happen. If a and b are non-unit vectors you're likely to get a nasty [NaN value](https://en.wikipedia.org/wiki/NaN) from acosf.
+
+This arc function can be used to implement all kinds of cool effects, such as an "aimer" that will track an object smoothly over time. Here's a demonstration of tracking the mouse over time. We can call `tigrMouse` to get the mouse coordinate in screen space. By carefully inverting the order of operations and all the operations of `world_to_screen` we can implement `screen_to_mouse`.
+
+{% highlight cpp %}
+v2 screen_to_world(int x, int y)
+{
+	v2 p = v2((float)x, (float)y);
+	float half_screen_width = 640.0f / 2.0f;
+	float half_screen_height = 480.0f / 2.0f;
+	p.x -= half_screen_width;
+	p.y -= half_screen_height;
+	p.y = -p.y;
+	return p;
+}
+
+v2 mouse()
+{
+	int x, y, buttons;
+	tigrMouse(screen, &x, &y, &buttons);
+	return screen_to_world(x, y);
+}
+{% endhighlight %}
+
+{% highlight cpp %}
+#include <math.h>
+#include "tigr.h"
+#include "math_101.h"
+#include "draw.h"
+
+#include <stdio.h>
+
+int main()
+{
+	screen = tigrWindow(640, 480, "Math 101", 0);
+
+	float t = 0;
+	v2 aim = v2(50, 100);
+	while (!tigrClosed(screen) && !tigrKeyDown(screen, TK_ESCAPE)) {
+		float dt = tigrTime();
+		t += dt;
+		tigrClear(screen, color_black());
+
+		v2 m = mouse();
+		draw_box(aabb(m - v2(10.0f, 10.0f), m + v2(10.0f, 10.0f)), color_white());
+		float angle = shortest_arc(aim, m);
+		aim = mul(sincos(angle * dt * 2.0f), aim);
+		draw_vector(v2(0, 0), aim, color_white());
+
+		tigrUpdate(screen);
+	}
+
+	tigrFree(screen);
+
+	return 0;
+}
+{% endhighlight %}
+
+![angle_tracking.gif](/assets/angle_tracking.gif)
 
 THIS POST IS A WIP
 
 I'LL ADD MORE SOON
 
 Topics to come:
-* dot product
-* cross product
 * distance
 * bezier
 * safe inversion
