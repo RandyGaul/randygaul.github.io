@@ -12,7 +12,7 @@ We will be using C++ and writing our own math to create some demonstrations and 
 
 gif here
 
-### Prerequisites
+## Prerequisites
 
 You'll need to know some basic C++ (well, more like just some basic C stuff), but not much so don't be worried. If you're not quite comfortable feel free to visit some online C++ tutorials and then come back here later to try again. At a minimum I'd recommend learning about these topics:
 
@@ -21,39 +21,39 @@ You'll need to know some basic C++ (well, more like just some basic C stuff), bu
 * Functions
 * Structs
 
-### Get a Compiler
+## Get a Compiler
 
 Since we're using C++ we need a compiler. If you already have one and are familiar with how to use them, skip ahead. For those on Mac/Windows here's how I recommend setting up the `g++` compiler.
 
-#### Make a Folder for this Article
+### Make a Folder for this Article
 
 Go ahead and make your own personal folder for holding all the files for this article. I'd recommend naming it `math_101`.
 
-#### Windows
+### Windows
 
 If you're on Windows I recommend to use [TDM-GCC](https://jmeubank.github.io/tdm-gcc/download/), a dead-simple compiler distribution for `g++`. Just download the installer and open up a command prompt ***after you install the compiler***. Here's a gif showing how to open a command prompt in a specific window (below). You can also use the [cd command](https://www.youtube.com/watch?v=BfXh11ryBJg) to move the command prompt to another folder. Move it to your `math_101` folder.
 
 ![command_prompt](/assets/command_prompt.gif)
 
-#### Mac
+### Mac
 
 On Mac just download Xcode from the Asset Store. This will automatically install the command line tools for you, including `g++`. Open up the terminal application ***after you install Xcode***. You can also use the [cd command](https://www.youtube.com/watch?v=DvwWJw6Ppns) to move the terminal to another folder. Move it to your `math_101` folder.
 
 Most people reading this article will be using a Windows machine. One Windows they use command prompt instead of Terminal. Later when reading, if you see "command prompt" just think Terminal instead. The rest of the steps are 99% the same, despite this difference.
 
 
-#### Linux
+### Linux
 
 If you're on Linux then I'll assume you're already quite familiar with C/C++ and compilers.
 
-### Grab a Copy of tigr
+## Grab a Copy of tigr
 
 We're using the tigr library. It's the easiest possible graphics library to get running and use. It handles a bunch of [OpenGL](https://en.wikipedia.org/wiki/OpenGL) stuff for us, in case you were curious. It consists of merely one header file and one source file. Grab a copy of each and put them into your `math_101` folder.
 
 * [tigr.h](https://raw.githubusercontent.com/erkkah/tigr/master/tigr.h)
 * [tigr.c](https://raw.githubusercontent.com/erkkah/tigr/master/tigr.c)
 
-### Build and Run the Math 101 Program
+## Build and Run the Math 101 Program
 
 Make a file called `main.cpp` in your `math_101` folder. Copy + paste this code snippet into your `main.cpp` file.
 
@@ -121,7 +121,7 @@ This will produce an executable file called `math_101_program`. Go ahead and run
 
 Congrats!
 
-### Drawing some Lines
+## Drawing some Lines
 
 The function `tigrLine` will draw us lines. All we need to do is specify where the line starts, ends, and it's color. Here's the function signature from the header file along with the documentation comments found in tigr.h.
 
@@ -161,7 +161,7 @@ It should look like this:
 
 ![math_101_lines](/assets/math_101_lines.png)
 
-### Positions (points) and Vectors
+## Positions (points) and Vectors
 
 You've already used them in the last section on drawing lines! A vector is just a collection of numbers, each called a component. For games it's very common to use 2D, 3D, and occassionally 4D vectors. For this article let's just stick with 2D vectors. Usually we use vectors to represent positions, velocities, and directions. For each of these vectors there would be an x and y a component.
 
@@ -240,7 +240,7 @@ Similarly we can move a points position by addition. We can add a vector to a po
 1. A point added with a vector moves the point along the vector.
 2. A point subtracted with a vector moves the point along the negative vector.
 
-### Drawing some Points
+## Drawing some Points
 
 We can draw a single pixel at a specified point with the function `tigrPlot`. Here's the signature and docs from the header tigr.h:
 
@@ -374,7 +374,7 @@ int main()
 
 ![math_101_point_offset](/assets/math_101_point_offset.png)
 
-### Animating
+## Animating
 
 In games we often used what's called an axis-aligned bounding box (or aabb for short). It means a box that's aligned onto the x and y axis. We can define an aabb struct in a few ways by using our knowledge of points (positions) and vectors (direction).
 
@@ -624,7 +624,7 @@ int main()
 
 ![morphing_box](/assets/morphing_box.gif)
 
-### Transforming the Screen Space
+## Transforming the Screen Space
 
 When we're talking about games and math the word transform means to go from one coordinate space to another. You're likely already familiar with the [traditional 2D cartesian space](https://en.wikipedia.org/wiki/Cartesian_coordinate_system), whether or not you're familiar with the terminology. There are two axes, one for x and one for y. However, it's possible to take that 2D space and transform it to another space.
 
@@ -796,7 +796,7 @@ From here on when we write new math code you can follow along and place it into 
 
 > NOTE: Those more familiar with C might notice no include guards were used. Don't worry about this for now, we'll cover it later. For now it's more important to just focus on the math and pump out more code. Our program is just one-file conceptually, and we're only splitting it up into different files to make following this article easier.
 
-### Rotations
+## Rotations
 
 Rotations are actually much more easy to perform than they are to learn about. Here comes another one of those rules to burn into your mind: *rotations are always done about the origin*. This is the truth. Here is how we rotate a vector or point about the origin given an angle in [radians](https://mathworld.wolfram.com/Radian.html#:~:text=The%20radian%20is%20a%20unit,or%2057.).
 
@@ -958,7 +958,7 @@ int main()
 
 ![spokes.gif](/assets/spokes.gif)
 
-### Unit Vectors + Normalization
+## Unit Vectors + Normalization
 
 You must have this super useful vector drawing function in your rendering arsenal. Used to visualize vectors at a specific location (remember, a vector is merely a direction, as drawing a vector must happen at a location), the vector drawing function can save us from many headaches down the line whenever we must debug our code and figure out what's going on.
 
@@ -1077,7 +1077,7 @@ void draw_vector(v2 p, v2 v, TPixel color, float scale = 5.0f)
 
 This function scales the arrowhead about the origin, then rotate's about the origin, and finally translates.
 
-### Dot Product
+## Dot Product
 
 If you were asked what the most critical math function in call of gamedev is, what might the answer be? It better darned be the dot product! The core math function used in almost every geometric calculation ever, it's used to calculate some information about how to vectors relate to each other. It can be used to understand the angle between vectors, wether vectors are facing each other or not, and as an optimized was to compute the cos of the angle between two vectors without actually calling the `cosf` function.
 
@@ -1161,7 +1161,7 @@ If the sign of dot(u, v) is positive the vectors are facing in the same directio
 float len_squared(v2 v) { return dot(v, v); }
 {% endhighlight %}
 
-### Cross Product (aka 2D Determinant)
+## Cross Product (aka 2D Determinant)
 
 The cross product is the sibling of the dot product. It computes the sin of the angle between two vectors (scaled by the length of each vector), as opposed to the cos like the dot product. It looks quite similar, though we won't get into the derivation for the sake of brevity. In 2D games it's not quite as useful as the dot product, but does make its appearance occasionally. Note that the cross between two parallel vectors is 0.
 
@@ -1251,7 +1251,7 @@ int main()
 
 ![angle_tracking.gif](/assets/angle_tracking.gif)
 
-### Distance and Planes
+## Distance and Planes
 
 A plane in 2D is just a line. A fancy name for a line. In 3D however, planes are like infinitely large flat sheets of paper. Another name for a plane is halfspace, because they slice all of space perfectly in half. All of these terms can be used interchangebly in 2D.
 
@@ -1296,7 +1296,7 @@ Here are some extremely useful operations you can do with planes.
 2. Project a point onto the surface of a plane.
 3. Compute the intersection of a line to a plane (like a raycast, more on raycasting later).
 
-#### Distance Point to Plane
+### Distance Point to Plane
 
 First up is to compute the distance of a point to a plane. Let us assume the n vector of the plane is normalized. Simply plug the point into the plane equation.
 
@@ -1321,7 +1321,7 @@ float distance(halfspace h, v2 p) { return dot(h.n, p) - h.c; }
 
 If the distance is positive then p is on the side of the plane the normal is facing, negative otherwise.
 
-#### Project Point onto Plane
+### Project Point onto Plane
 
 Projecting a point onto a plane means moving the point to the plane's surface by moving it the shortest distance possible. The shortest distance is along the plane's normal vector. Therefor all we do is compute the distance to the plane, then move the point along the normal by that negated distance.
 
@@ -1329,7 +1329,7 @@ Projecting a point onto a plane means moving the point to the plane's surface by
 v2 project(halfspace h, v2 p) { return p - distance(h, p); }
 {% endhighlight %}
 
-#### Intersection of a Line and a Plane
+### Intersection of a Line and a Plane
 
 This one is also quite easy if you visualize it with a drawing, but there's also the algebraic derivation. Let's start with the algebra. Choosing the parametric form for a line is an easy way to do it. Just note [the dot product is bilinear](https://en.wikipedia.org/wiki/Dot_product#Properties).
 
@@ -1395,7 +1395,7 @@ v2 intersect(halfspace h, v2 q, v2 p)
 }
 {% endhighlight %}
 
-### Bezier Curves and Lerp
+## Bezier Curves and Lerp
 
 [Lerp](https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/a-brief-introduction-to-lerp-r4954/) stands for linear interpolation. It means picking a number between two endpoints (a and b) based on a t value. Usually t is a value from 0 to 1. If t is 0 then you get a, otherwise if 1 you get b. Wikipedia has these three excellent images of lerping and bezier curves I'll include below. The values of t are animating from 0 to 1, and lerp/bezier functions are used on input points p0 through p3 to move a point along a bezier curve.
 
@@ -1677,12 +1677,12 @@ int main()
 
 Just be careful with these optimized versions, because small values of u or t create numeric problems when multiplied together over and over. If the numbers get too small you can end up with [denormalized numbers](https://en.wikipedia.org/wiki/Subnormal_number) or just numerically innaccurate results. The previous version using successive lerps or more numerically stable.
 
-### Matrices
+## Matrices
 
-### Transforms
+## Transforms
 
-### Raycasting
+## Raycasting
 
-### Collision Detection Basics
+## Collision Detection Basics
 
 THIS POST IS A WIP
