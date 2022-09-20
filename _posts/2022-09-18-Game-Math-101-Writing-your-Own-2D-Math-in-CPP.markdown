@@ -1223,8 +1223,6 @@ v2 mouse()
 #include "math_101.h"
 #include "draw.h"
 
-#include <stdio.h>
-
 int main()
 {
 	screen = tigrWindow(640, 480, "Math 101", 0);
@@ -1507,8 +1505,6 @@ And here's a demonstration program to draw a quadratic bezier curve, and also an
 #include "math_101.h"
 #include "draw.h"
 
-#include <stdio.h>
-
 int main()
 {
 	screen = tigrWindow(640, 480, "Math 101", 0);
@@ -1640,8 +1636,6 @@ v2 bezier(v2 a, v2 b, v2 c, v2 d, float t)
 #include "math_101.h"
 #include "draw.h"
 
-#include <stdio.h>
-
 int main()
 {
 	screen = tigrWindow(640, 480, "Math 101", 0);
@@ -1667,7 +1661,6 @@ int main()
 		}
 
 		float pt = (cosf(t) + 1.0f) * 0.5f;
-		printf("pt : %f\n", pt);
 		v2 box_center = bezier(a, b, c, d, pt);
 		draw_box(aabb(box_center - v2(10, 10), box_center + v2(10, 10)), color_white());
 
