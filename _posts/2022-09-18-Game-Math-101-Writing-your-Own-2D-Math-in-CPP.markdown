@@ -1399,7 +1399,7 @@ v2 intersect(halfspace h, v2 q, v2 p)
 
 ### Bezier Curves and Lerp
 
-[Lerp](https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/a-brief-introduction-to-lerp-r4954/) stands for linear interpolation. It means picking a number between two endpoints (a and b) based on a t value. Usually t is a value from 0 to 1. If t is 0 then you get a, otherwise if 1 you get b. Wikipedia has these three excellent images of lerping and bezier curves. The values of t are animating from 0 to 1, and lerp/bezier functions are used on input points p0 through p3 to move a point along a bezier curve.
+[Lerp](https://www.gamedev.net/tutorials/programming/general-and-gameplay-programming/a-brief-introduction-to-lerp-r4954/) stands for linear interpolation. It means picking a number between two endpoints (a and b) based on a t value. Usually t is a value from 0 to 1. If t is 0 then you get a, otherwise if 1 you get b. Wikipedia has these three excellent images of lerping and bezier curves I'll include below. The values of t are animating from 0 to 1, and lerp/bezier functions are used on input points p0 through p3 to move a point along a bezier curve.
 
 {% highlight cpp %}
 float lerp(float a, float b, float t) { return a + (b - a) * t; }
@@ -1436,7 +1436,7 @@ v2 bezier(v2 a, v2 b, v2 c, v2 d, float t)
 
 These are useful for animating all kinds of effects in your game, such as roller coasters, transitions from here to there, missiles, grass blowing in the wind, wires hanging from telephone poles.
 
-As an optimization these functions can be refactored into forms where redundant calulcations are done up-front and then reused as much as possible. It's easiest to figure out how to reduce redundant terms through algebra.
+As an optimization these functions can be refactored into forms where redundant calulcations are done up-front and then reused as much as possible through a bunch of fairly gnarly algebra. Let's do it.
 
 The first step is to unwind the lerps into their raw form.
 
@@ -1634,8 +1634,6 @@ v2 bezier(v2 a, v2 b, v2 c, v2 d, float t)
 }
 {% endhighlight %}
 
-![cubic_bezier.gif](/assets/cubic_bezier.gif)
-
 {% highlight cpp %}
 #include <math.h>
 #include "tigr.h"
@@ -1682,19 +1680,16 @@ int main()
 }
 {% endhighlight %}
 
-Just be careful with these optimized versions, because small values of u or t create numeric problems. If the numbers get too small you can end up with [denormalized numbers](https://en.wikipedia.org/wiki/Subnormal_number) or just numerically innaccurate results. The previous version using successive lerps or more numerically stable.
+![cubic_bezier.gif](/assets/cubic_bezier.gif)
+
+Just be careful with these optimized versions, because small values of u or t create numeric problems when multiplied together over and over. If the numbers get too small you can end up with [denormalized numbers](https://en.wikipedia.org/wiki/Subnormal_number) or just numerically innaccurate results. The previous version using successive lerps or more numerically stable.
+
+### Matrices
+
+### Transforms
+
+### Raycasting
+
+### Collision Detection Basics
 
 THIS POST IS A WIP
-
-I'LL ADD MORE SOON
-
-Topics to come:
-* bezier
-* safe inversion
-* rotation
-* matrices
-* easing functions
-* transforms
-* plane
-* rays/raycasting
-* basic collision detection
