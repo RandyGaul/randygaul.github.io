@@ -1049,7 +1049,7 @@ void draw_vector(v2 p, v2 v, TPixel color)
 }
 {% endhighlight %}
 
-Congratulations! You just optimized away an `atan2f`, `sinf` and `cosf` calls and replaced them with a single `sqrtf` call (inside of our `len` and `norm` functions)!
+Congratulations! You just optimized away `atan2f`, `sinf` and `cosf` calls and replaced them with a single `sqrtf` call (inside of our `len` and `norm` functions)!
 
 The final thing we can change is adding in a scale value. Recall from earlier that scaling a vector is merely multiplying it's components by the scale factor. Sear this rule into your brain: *scaling happens about the origin*. Period. If you wish to scale about another point simply translate to the origin first, then translate back after.
 
@@ -1077,13 +1077,81 @@ void draw_vector(v2 p, v2 v, TPixel color, float scale = 5.0f)
 
 This function scales the arrowhead about the origin, then rotate's about the origin, and finally translates.
 
+### Dot Product
+
+If you were asked what the most critical math function in call of gamedev is, what might the answer be? It better darned be the dot product! The core math function used in almost every geometric calculation ever, it's used to calculate some information about how to vectors relate to each other. It can be used to understand the angle between vectors, wether vectors are facing each other or not, and as an optimized was to compute the cos of the angle between two vectors without actually calling the `cosf` function.
+
+The dot product comes from the [law of cosines](http://en.wikipedia.org/wiki/Law_of_cosines). Here’s the formula:
+
+```
+Equation 1
+
+c^2 = a^2 + b^2 – 2ab * cos(γ)
+```
+
+This is just an equation that relates the cosine of an angle within a triangle to its various side lengths a, b and c. The Wikipedia page on the law of cosines (link above) does a nice job of explaining this in excrutiating detail. Equation 1 can be rewritten as:
+
+```
+Equation 2
+
+c^2 – a^2 – b^2 = -2ab * cos(γ)
+```
+
+The right hand side equation Equation 2 is interesting! Lets say that instead of writing the equation with side lengths a, b and c, it is written with two vectors: u and v. The third side can be represented as u – v. Recall that `|v|` means the length of v, computed by using the [Pythagorean Thereom](https://en.wikipedia.org/wiki/Pythagorean_theorem). Re-writing equation Equation 2 in vector notation yields:
+
+```
+Equation 3
+
+|u - v|^2 – |u|^2 – |v|^2 = -2|u||v| * cos(γ)
+```
+
+Which can be expressed in scalar form as:
+
+```
+Equation 4
+
+(u.x - v.x)^2 + (u.y - v.y)^2 + (u.z - v.z)^2 -
+((u.x)^2 + (u.y)^2 + (u.z)^2) - ((v.x)^2 + (v.y)^2 + (v.z)^2) =
+-2|u||v| * cos(γ)
+```
+
+By crossing out some redundant terms, and getting rid of the -2 on each side of the equation, this ugly equation can be turned into a much more approachable version:
+
+```
+Equation 5
+
+u.x * v.x + u.y * v.y + u.w * v.w = |u||v| * cos(γ)
+```
+
+Equation 5 is the equation for the dot product. If both u and v are unit vectors then the equation will simplify to:
+
+```
+Equation 6
+
+dot(u, v) = cos(γ)
+```
+
+If u and v are not unit vectors equation 5 says that the dot product between both vectors is equal to `cos(γ)` that has been scaled by the lengths of u and v. This is a nice thing to know! For example: the squared length of a vector is just itself dotted with itself. We can use this knowledge to rewrite our `len` function with the dot product.
+
+{% highlight cpp %}
+float len(v2 v) { return sqrtf(v.x * v.x + v.y * v.y); }
+// =>
+float dot(v2 a, v2 b) { return a.x * b.x + a.y * b.y; }
+float len(v2 v) { return sqrtf(dot(v, v)); }
+{% endhighlight %}
+
+If u is a unit vector and v is not, then `dot(u, v)` will return the distance in which v travels in the u direction. We will make prolific use of the dot product later!
+
+### Cross Product (aka 2D Determinant)
+
+
+
 THIS POST IS A WIP
 
 I'LL ADD MORE SOON
 
 Topics to come:
 * dot product
-* skew
 * cross product
 * distance
 * bezier
