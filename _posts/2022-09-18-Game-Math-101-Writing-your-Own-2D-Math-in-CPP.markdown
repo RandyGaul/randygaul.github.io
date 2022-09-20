@@ -1681,6 +1681,8 @@ Just be careful with these optimized versions, because small values of u or t cr
 
 In game development matrices are mostly useful for representing transformations, namely scales, rotations and translations. In 3D graphics there's also some projection matrices, but we're sticking to 2D here. A matrix stores the information needed to perform a transformation upon vectors, such as placing an object into the world, or defining a relative position to another object.
 
+### Rotation Matrices
+
 We will be using 2x2 matrices to represent rotations and scales, and later attach a position vector to create a 3x2 matrix to represent a full transform. A convenient way to look at a 2x2 matrix is like a collection of two vectors. Take a look at the matrix m.
 
 ```
@@ -1690,7 +1692,7 @@ m = [ux, vx]
     [uy, vy]
 ```
 
-Each column of m is a vector u or v. If this matrix is a rotation matrix, then u and v would be the basis vectors. u is the x-axis and v is the y-axis. When u and v are unit vectors we call m a rotation matrix. We've actually already been using rotation matrices without knowing, back in the rotation section of this article. Let's define our matrix struct type and a function to build a rotation matrix.
+Each column of m is a vector u or v. If this matrix is a rotation matrix, then u and v would be the basis vectors. u is the x-axis and v is the y-axis. When u and v are unit vectors, *and orthogonal* (at 90 degree angles from each other), we call m a rotation matrix. We've actually already been using rotation matrices without knowing, back in the rotation section of this article. Let's define our matrix struct type and a function to build a rotation matrix.
 
 {% highlight cpp %}
 struct m2
@@ -1717,9 +1719,15 @@ The mul function is defined by [matrix multiplication rules](https://en.wikipedi
 If you write down the operations by hand of multiplying a rotation matrix with a vector you'll find it to be identical to our mul function for rotations (sin + cos pair) and vectors.
 
 ```
+               x-axis
+                 v
 rotation(a) = [cos(a), -sin(a)]
-              [cos(a),  sin(a)]
+              [sin(a),  cos(a)]
+                          ^
+                        y-axis
 ```
+
+The above matrix performs a *clockwise rotation*.
 
 Matrix multiplication with vectors simply encodes a [linear combination](https://en.wikipedia.org/wiki/Linear_combination). Within that combination is our transformation (a rotation, scale, or mixture of both).
 
@@ -1729,19 +1737,291 @@ An extremely useful property of matrices is we can multiply two matrices togethe
 m2 mul(m2 a, m2 b) { m2 c; c.x = mul(a, b.x); c.y = mul(a, b.y); return c; }
 {% endhighlight %}
 
-The transpose of a matrix TODO - WORKING HERE
+The transformation of a rotation matrix can be inverted. There actually exists an inversion operation for matrices in general, but for dimensions larger than 2x2 matrices it gets fairly expensive. A bigger problem about generic inversion functions on matrices is they encourage us to black-box matrices without knowing what the various pieces actually do or represent. For example, we know we can construct a rotation matrix out of two orthogonal unit vectors by simply placing them in the first and second columns. We already have some insight about the internals here.
+
+We can realize quite intuitively how to invert a 2D rotation matrix without learning or bothering with a generic inversion function. We know that a 90 degree counter-clockwise rotation matrix looks like this:
+
+```
+[cos(a), -sin(a)]
+[sin(a),  cos(a)]
+```
+
+If we compute the sin and cos of 90 degrees, we get these values:
+
+```
+[0, -1]
+[1,  0]
+```
+
+When we multiply this matrix with a vector we can see the overall effect:
+
+```
+[0, -1][x]   [-y]
+[1,  0][y] = [ x]
+```
+
+This is actually the same effect as our earlier learnings about the skew function. If we look just at the first column of our rotation matrix we can see exactly what it's encoding when we do a multiplication with a vector. Let's look step by step.
+
+```
+1.  v---------------- x * 0, The input x component will contribute 0 to the final x component.
+   [0,  ][x] = [x * 0]
+   [ ,  ][ ] = [  ]
+
+2.      v------------ -1 * y, The input y component will contribute -1 to the final x component.
+   [ , -1][ ] = [x * 0 + -1 * y]
+   [ ,   ][y] = [  ]
+
+   [ ,   ][x] = [x * 0 + -1 * y]
+   [1,   ][ ] = [x * 1]
+3.  ^---------------- 1 * x, The input x component will contribute 1 to the final y component.
+
+   [ ,   ][x] = [x * 0 + -1 * y]
+   [ ,  0][ ] = [x * 1 +  0 * y]
+4.      ^----------- 0 * y, The input y component will contribute 0 to the final x component.
+```
+
+In steps 1-2 the linear combination for the output x-component is created. The first column in the rotatio matrix, the x-axis, decides where the new x-axis will go. A 1 in the first element means the x-axis will not change. If we move the 1 to the y-component, it means the x-axis is rotated to the y-axis. In fact, we can place any combination of -1 to 1 in the elements of the rotation matrice's first column, so long as the columns length is 1 and the y column is orthogonal -- it will be a valid rotation.
+
+How can we perform the inverted rotation? The inverted rotation of moving the x-axis to the y-axis, would be moving the x-axis back from the y-axis.
+
+```
+1.
+[0,  ]
+[1,  ]
+
+2.
+[1,  ]
+[0,  ]
+
+3.
+[ 0,  ]
+[-1,  ]
+
+4.
+[-1,  ]
+[ 0,  ]
+```
+
+Which option from 1-4 do you think might be the correct answer? Option 1 is what we already did earlier -- it moved the x-axis to the y-axis, a 90 degree rotation counter-clockwise as was promised. Option 1 definitely does not invert itself. What about option 2? If we perform the math we find this means leave the x-axis unchanged. It does no operation at all. We call this an *identity* transform. What about options 4? This simply flips the x-axis to point backwards. That leaves option 3. It will rotate the x-axis to the y-axis *but also flip it*, performing a clockwise rotation. This is our 90 degree counter-clockwise rotation inverted.
+
+Intuitively that means we can invert the y column of our rotation matrix with a negation operator as well. The full inversion of our 90-degree rotation matrix is simply to negate each element.
+
+```
+[ 0, 1]^-1   [0, -1]
+[-1, 0]    = [1,  0]
+```
+
+Great! Will this work for all rotation matrices, even non-90 degree rotations? Sadly no, simple negation won't work. However, transpose does work. Transpose simply means to make all the columns become rows, and all the rows become columns (by rotating the matrix clockwise). For any rotation it's inverse is the transpose operation (which, for 90 degree 2D rotations is equivalent to negation).
+
+```
+Rotation matrix A and it's inversion B:
+A^-1 = A^T = B
+```
 
 Here are some notable properties of rotation matrices:
 
-1. non commutative
-2. transpose is the inverse
+1. Multiplication is non-commutative. That means A * B != B * A. If you switch around the order of operations *you will get a different effect*. This goes back to our old rule, listed next as number 2.
+2. Rotations are always performed about the origin. Period. It's possible to encode a larger dimensioned matrix than a mere 2x2 matrix that concatenate many rotations, translations and scales together - but each individual rotation encoded within will still have been perform about the origin. Even if the transform encodes first a translation, then a rotation, then an inverse translation (rotating about a point), the rotation itself was still done about the origin at the (despite it being temporarily shifted).
+3. The inverse of a rotation matrix is the transposition of the rotation matrix.
 
-Our 2x2 matrix, m2, can also encode a scaling factor along the x-axis or y-axis.
+Going back to m2 struct we can retrive the x-axis or y-axis of a rotation matrix any time by simply getting the x column or y column.
 
-1. commutative
-2. inverse flips the scale factor
+{% highlight cpp %}
+m2 = m2_rotation(angle);
+v2 x_axis = m2.x;
+v2 y_axis = m2.y;
+{% endhighlight %}
+
+### Scale Matrices
+
+Our 2x2 matrix, m2, can also encode a scaling factor along the x-axis or y-axis. A quick note on some properties of scale matrices.
+
+1. They are commutative. Since a scale matrix does not rotate any axes, they act like scalar multiples. A * B = B * A.
+2. The inverse of a scale operation is to divide by the same magnitude (fancy word for length/value).
+
+The scale of our 2x2 matrices will be encoded as the length of the x-column or the y-column, representing scaling along the x-axes and y-axes respectively.
+
+```
+[xx, yx]
+[xy, yy]
+
+x-column/x-axis = (xx, xy)
+y-column/y-axis = (yx, yy)
+
+Scale along x-axis = |(xx, xy)|
+Scale along y-axis = |(yx, yy)|
+```
+
+Going back to our m2 struct, we can add functionality for creating a scale matrix.
+
+{% highlight cpp %}
+m2 m2_identity()
+{
+	m2 m;
+	m.x = v2(1, 0);
+	m.y = v2(0, 1);
+	return m;
+}
+
+m2 m2_scale(float x_scale, float y_scale)
+{
+	m2 m = m2_identity();
+	m.x *= x_scale;
+	m.y *= y_scale;
+	return m;
+}
+{% endhighlight %}
+
+As hinted in the previous section on Rotation Matrices, the identity matrix is composed of a series of 1's along the diagonal. This simply leaves each respective component unchanged during multiplication. As promised, scaling is just scaling individual axes of the matrix.
+
+### Translations
+
+Our 2x2 m2 matrix is not designed to handle translations. However, we can augment our m2 struct by defining a wrapping struct that encompasses one more vector to store translation information. This would be a 3x2 matrix; we can call it m3x2.
+
+{% highlight cpp %}
+struct m3x2
+{
+	m2 m;
+	v2 p;
+};
+{% endhighlight %}
+
+Translations don't require too much explanation here -- you're already familiar with them! The key thing to note here is order of operations. When representing a full m3x2 matrix you can encode translations, rotations and scales all together. However, when mixing these operations you lose commutativity. Here comes another nice rule to sear into brain. Ssss...
+
+* To undo a series of transform operations, you must not only invert each operation, but also *reverse the order of operations*. Example: (A * B * C)-1 = C^-1 * B^-1 * C^-1
+
+And finally, a function to build a transformation matrix.
+
+{% highlight cpp %}
+m3x2 make_translation(v2 p)
+{
+	m3x2 m;
+	m.m = m2_identity();
+	m.p = p;
+	return m;
+};
+{% endhighlight %}
 
 ## Transforms
+
+With the nice m3x2 struct we defined in the previous section we can represent almost any kind of 2D transformation we might need, especially when we're thinking about the three most common ones: scaling, rotating and translating.
+
+First up, let's list down a series of `make_*` functions for building our m3x2 transormation matrices, including `make_translation` from the previous section.
+
+{% highlight cpp %}
+m3x2 make_identity() { m3x2 m; m.m = m2_identity; m.p = v2(0, 0); return m; }
+m3x2 make_translation(v2 p) { m3x2 m; m.m = m2_identity(); m.p = p; return m; };
+m3x2 make_translation(float x, float y) { return make_translation(v2(x, y)); }
+m3x2 make_scale(v2 scale) { m3x2 m = make_identity(); m.x *= scale.x; m.y *= scale.y; return m; }
+m3x2 make_scale(float scale_x, float scale_y) { return make_scale(v2(scale_x, scale_y)); }
+m3x2 make_rotation(float radians) { m3x2 m; m.m = m2_rotation(radians); m.p = v2(0, 0); return m; }
+m3x2 make_TSR(v2 p, v2 s, float radians)
+{
+	rotation r = sincos(radians);
+	m3x2 m;
+	m.x = v2(r.c, -r.s) * s.x;
+	m.y = v2(r.s, r.c) * s.y;
+	m.p = p;
+}
+{% endhighlight %}
+
+The really interesting function is `make_TSR`, it stands for rotate, then scale, then translate, in that order. It's a composition of all three kinds of transformations. Whenever we multiply it with a vector, the vector will be first rotated *about the origin*, then scaled *about the origin*, then translated. Here's the mul function for another vector.
+
+{% highlight cpp %}
+v2 mul(m3x2 m, v2 v) { return mul(m.m, v) + m.p; }
+{% endhighlight %}
+
+Similarly we can follow the rules of matrix multiplication and write down how to concatenate two m3x2 matrices with a mul function.
+
+{% highlight cpp %}
+// Transform b by a.
+m3x2 mul(m3x2 a, m3x2 b) { m3x2 c; c.m = mul(a.m, b.m); c.p = mul(a.m, b.p) + a.p; return c; }
+{% endhighlight %}
+
+The order of operations on the translation is quite important here. We want to transform b by a, which means we want to rotate a, then scale a, then translate a. The mul with a.m does the scale/rotation together in a single m2, and the translation happens afterwards.
+
+### Transforming Objects
+
+Usually in games you have two kinds of objects in the world: implicitly defined shapes and meshes. When I say it merely means an array of vertices. Sometimes these vertices are stored as triangle triplets, and somethings they are accompanied by an array of triangle indices. For 2D we can just stick the former: merely an array of vertices (regardless of whether they are individual points, line segments, or triangles). Think of a mesh as an array of v2's, like the vertices of a polygon.
+
+An implicitly defined shape reduces the amount of information needed to represent a shape down to a convenient minimum, like our aabb shape. Other common shapes include circles, capsules, and rays.
+
+Say we have a mesh definition like so:
+
+{% highlight cpp %}
+struct mesh
+{
+	array<v2> vertices;
+};
+{% endhighlight %}
+
+Transforming this mesh with an m3x2 is an extremely common operation; simply loop over all vertices and mul them with the m3x2. This can rotate, then scale, then translate all the vertices. This is such a common thing to do that we usually attach a dedicated m3x2 onto our objects with a mesh.
+
+{% highlight cpp %}
+struct game_object
+{
+	m3x2 transform;
+	array<v2> mesh;
+};
+{% endhighlight %}
+
+As a memory optimization it's common to store a single copy of a mesh in memory, and have different objects keep a pointer to the mesh and a transform. The mesh vertices themselves, as they sit in memory, are usually stoerd in what's called *model space*. This just means the vertices are likely very close to the origin and haven't been rotated/scaled/translated into the world yet.
+	
+To draw one of the meshes usually the vertices are copied over to the GPU (graphics processing unit). In tigr we just set pixels onto the screen directly. Whenever we want to draw a mesh we can loop over the vertices, mul them in the loop and use temporary v2 variables to represent the transformed verts. Then we draw with those temporary variables. The original source mesh vertices are as if they are in "read-only mode".
+
+{% highlight cpp %}
+struct game_object
+{
+	m3x2 transform;
+	array<v2>* mesh;
+};
+
+// This is just example code -- with tigr we aren't sending meshes to the GPU. But, for most games
+// this is an extremely common operation. We just use tigr for a nice and simple learning environment.
+void send_triangle_mesh_to_gpu(game_object* o)
+{
+	v2* vertices = o->mesh.data();
+	int size = o->mesh.size();
+	m3x2 m = o->m;
+	for (int i = 0; i < size; I += 3) {
+		v2 a = vertices[i];
+		v2 b = vertices[i + 1];
+		v2 c = vertices[i + 2];
+		a = mul(m, a);
+		b = mul(m, b);
+		c = mul(m, c);
+		gpu_context->add_triangle(a, b, c);
+	}
+}
+{% endhighlight %}
+	
+For an implicitly defined shape we can do the same, but scaling might be a bit difficult. For example how can we scale a circle along the x-axis but not the y-axis? It's a bit of a condundrum on what to do here. Nonetheless we can make a decision.
+
+{% highlight cpp %}
+struct circle
+{
+	v2 p;
+	float r;
+};
+
+circle mul(m3x2 m, circle c)
+{
+	c.r *= len(m.x);
+	c.p = mul(m, c.p);
+	return c;
+}
+{% endhighlight %}
+
+In the above example we chose to use the x-axis for scaling circles. How you decide to handle this case in your game is up to you. You could use the y-axis, you could use the min or max of both axes, or even the average of both axes.
+
+### Object Heirarchies
+
+It's quite common to give your game_object (or equivalence) a transform *and a parent*. The parent would be a reference, pointer or id to a parenting game object. The parent has it's own transform, while the game_object would have it's transform be defined relative to the parent's transform. If a game object has no parent, it's transform is absolute, and not relative.
+
+This can be useful to compose more complicated looking game objects. A great example would be 2D games that use skeletal animation for the animations. Each "bone" in a skeleton is merely a transformation matrix (like an m3x2). An image or mesh is placed into each bone, which each bone transformed relative to it's parent. A good way to learn about what skeletal animations look like is to check out these cool live demos by [Spine software](http://esotericsoftware.com/spine-demos). Some examples of games that use skeletal animation would be:
+
+* [Plants vs Zombies](https://play.google.com/store/apps/details?id=com.ea.game.pvzfree_row)
+* [Slay the Spire](https://store.steampowered.com/app/646570/Slay_the_Spire/)
 
 ## Raycasting
 
