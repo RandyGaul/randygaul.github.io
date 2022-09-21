@@ -37,7 +37,7 @@ If you're on Windows I recommend to use [TDM-GCC](https://jmeubank.github.io/tdm
 
 ### Mac
 
-On Mac just download Xcode from the Asset Store. This will automatically install the command line tools for you, including `g++`. Open up the terminal application ***after you install Xcode***. You can also use the [cd command](https://www.youtube.com/watch?v=DvwWJw6Ppns) to move the terminal to another folder. Move it to your `math_101` folder.
+On Mac just download Xcode from the App Store. This will automatically install the command line tools for you, including `g++`. Open up the terminal application ***after you install Xcode***. You can also use the [cd command](https://www.youtube.com/watch?v=DvwWJw6Ppns) to move the terminal to another folder. Move it to your `math_101` folder.
 
 Most people reading this article will be using a Windows machine. One Windows they use command prompt instead of Terminal. Later when reading, if you see "command prompt" just think Terminal instead. The rest of the steps are 99% the same, despite this difference.
 
@@ -295,7 +295,7 @@ int main()
   
         v2 a = v2(200, 300);
         v2 b = v2(100, 150);
-        v2 c = v2(400, 600);
+        v2 c = v2(600, 400);
 
 		draw_point(a, color_white());
 		draw_point(b, color_white());
@@ -350,7 +350,7 @@ int main()
 
 		v2 a = v2(200, 300);
 		v2 b = v2(100, 150);
-		v2 c = v2(400, 600);
+		v2 c = v2(600, 400);
 
 		draw_point(a, color_white());
 		draw_point(b, color_white());
@@ -425,7 +425,7 @@ However, for that last function to work properly we must expand our vector opera
 v2 operator*(v2 a, float b) { return v2(a.x * b, a.y * b); }
 {% endhighlight %}
 
-In math notation we can the length of a vector v is `|v|`. When we multiply a vector v, we are multiplying each component, which in turn scales the length by the same value. We can calculate the length of a vector by utilizing the Pythagorean Theorem `a^2 + b^c = c^2`, where a, b and c are sides of a right triangle.
+In math notation the length of a vector v is `|v|`. When we multiply a vector v, we are multiplying each component, which in turn scales the length by the same value. We can calculate the length of a vector by utilizing the Pythagorean Theorem `a^2 + b^c = c^2`, where a, b and c are sides of a right triangle.
 
 ![pythagorean](/assets/pythagorean.png)
 
@@ -805,7 +805,7 @@ v2 rotate(v2 v, float a)
 {
 	float s = sinf(a);
 	float c = cosf(a);
-	return v2(c * b.x - s * b.y, s * b.x + c * b.y);
+	return v2(c * v.x - s * v.y, s * v.x + c * v.y);
 }
 {% endhighlight %}
 
@@ -874,7 +874,7 @@ v2 rotate(v2 v, float a)
 {
 	float s = sinf(a);
 	float c = cosf(a);
-	return v2(c * b.x - s * b.y, s * b.x + c * b.y);
+	return v2(c * v.x - s * v.y, s * v.x + c * v.y);
 }
 {% endhighlight %}
 
