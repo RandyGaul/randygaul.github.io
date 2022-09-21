@@ -90,7 +90,7 @@ The two parameters a and b are used to define the line segment itself. The direc
 
 After a brief visit to the Wikipedia page for this exact problem I quickly wrote down my own derivation of the formula they have on their page. Take a look at this image I drew:
 
-![dist_pt_line_segment](/assets/dist_pt_line_segment.gif)
+![dist_pt_line_segment](/assets/dist_pt_line_segment.png)
 
 The problem of finding the distance of a point to a line makes use of finding the vector d that points from p to the closest point on the line ab. From the above picture: a simple way to calculate this vector would be to subtract away the portion of a – p that travels along the vector ab.
 
