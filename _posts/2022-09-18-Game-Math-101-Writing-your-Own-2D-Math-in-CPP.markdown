@@ -904,7 +904,7 @@ v2 rotate_point_a_around_point_b(v2 a, v2 b, float radians)
 }
 {% endhighlight %}
 
-The functions `cosf` and `sinf` are quite fast on modern processors, but still should be thought of as an order of magnitude (10x) slower than a normal float multiply. Therefor it's going to be preferable to precompute these values whenever we can and store them. A good way for our math library to make use of rotations is to make a struct representing a rotation. It can be multiplied with vectors to rotate them by an angle.
+The functions `cosf` and `sinf` are quite fast on modern processors, but still should be thought of as an order of magnitude (10x) slower than a normal float multiply. Therefore it's going to be preferable to precompute these values whenever we can and store them. A good way for our math library to make use of rotations is to make a struct representing a rotation. It can be multiplied with vectors to rotate them by an angle.
 
 {% highlight cpp %}
 struct rotation
@@ -1079,7 +1079,7 @@ This function scales the arrowhead about the origin, then rotate's about the ori
 
 ## Dot Product
 
-If you were asked what the most critical math function in call of gamedev is, what might the answer be? It better darned be the dot product! The core math function used in almost every geometric calculation ever, it's used to calculate some information about how to vectors relate to each other. It can be used to understand the angle between vectors, wether vectors are facing each other or not, and as an optimized was to compute the cos of the angle between two vectors without actually calling the `cosf` function.
+If you were asked what the most critical math function in call of gamedev is, what might the answer be? It better darned be the dot product! The core math function used in almost every geometric calculation ever, it's used to calculate some information about how two vectors relate to each other. It can be used to understand the angle between vectors, wether vectors are facing each other or not, and as an optimized was to compute the cos of the angle between two vectors without actually calling the `cosf` function.
 
 The dot product comes from the [law of cosines](http://en.wikipedia.org/wiki/Law_of_cosines). Here’s the formula:
 
@@ -1120,7 +1120,7 @@ By crossing out some redundant terms, and getting rid of the -2 on each side of 
 ```
 Equation 5
 
-u.x * v.x + u.y * v.y + u.w * v.w = |u||v| * cos(γ)
+u.x * v.x + u.y * v.y + u.z * v.z = |u||v| * cos(γ)
 ```
 
 Equation 5 is the equation for the dot product. If both u and v are unit vectors then the equation will simplify to:
@@ -1155,7 +1155,7 @@ Point 5) begs some extra attention. The sign function means like this:
 float sign(float x) { return x > 0 ? 1.0f : -1.0f; }
 {% endhighlight %}
 
-If the sign of dot(u, v) is positive the vectors are facing in the same direction. If dot(u, v) is negative, the vectors are facing away from each other! Therefor it's quite useful to have a `len_squared` function laying around that skips the `sqrtf` function; if you only need to check the sign then it's totally fine if the resulting angle is scaled.
+If the sign of dot(u, v) is positive the vectors are facing in the same direction. If dot(u, v) is negative, the vectors are facing away from each other! Therefore it's quite useful to have a `len_squared` function laying around that skips the `sqrtf` function; if you only need to check the sign then it's totally fine if the resulting angle is scaled.
 
 {% highlight cpp %}
 float len_squared(v2 v) { return dot(v, v); }
@@ -1269,7 +1269,7 @@ ax + by - c = 0
 
 ![plane_equation.png](/assets/plane_equation.png)
 
-Where (a, b) is a vector called the plane normal, while (x, y) are parameters to uniquely identify any point on the plane. c is an offset from the origin, like a distance value of the plane from the origin (scaled by the length of normal (a, b)). Often times the normal (a, b) is normalized to be a unit vector, this makes c the actual distance of the plane to the origin. In practice most times planes are used with unit normal vectors.
+Where (a, b) is a vector called the plane normal, while (x, y) are parameters to uniquely identify any point on the plane. c is an offset from the origin, like a distance value of the plane from the origin (scaled by the length of normal (a, b)). Oftentimes the normal (a, b) is normalized to be a unit vector, this makes c the actual distance of the plane to the origin. In practice most times planes are used with unit normal vectors.
 
 Finally there's a parametric form which uses a single point on the line, and a vector to another point on the line.
 
@@ -1323,7 +1323,7 @@ If the distance is positive then p is on the side of the plane the normal is fac
 
 ### Project Point onto Plane
 
-Projecting a point onto a plane means moving the point to the plane's surface by moving it the shortest distance possible. The shortest distance is along the plane's normal vector. Therefor all we do is compute the distance to the plane, then move the point along the normal by that negated distance.
+Projecting a point onto a plane means moving the point to the plane's surface by moving it the shortest distance possible. The shortest distance is along the plane's normal vector. Therefore all we do is compute the distance to the plane, then move the point along the normal by that negated distance.
 
 {% highlight cpp %}
 v2 project(halfspace h, v2 p) { return p - distance(h, p); }
@@ -1378,7 +1378,7 @@ v2 intersect(halfspace h, v2 q, v2 p)
 }
 {% endhighlight %}
 
-Next is to notice we can move q along the vector p - q to find the intersection point. But by how much should we move q? We know it's some factor between the distance of p and q from the plane. Factor means a ratio or division operator. Therefor we can calculate how far along the plane's normal p - q travels, and multiply it by this ratio to compute the intersection.
+Next is to notice we can move q along the vector p - q to find the intersection point. But by how much should we move q? We know it's some factor between the distance of p and q from the plane. Factor means a ratio or division operator. Therefore we can calculate how far along the plane's normal p - q travels, and multiply it by this ratio to compute the intersection.
 
 ![line_plane_solution.png](/assets/line_plane_solution.png)
 
