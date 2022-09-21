@@ -2187,6 +2187,8 @@ bool raycast_circle(ray r, circle c, raycast* out)
 }
 {% endhighlight %}
 
+![ray_circle.gif](/assets/ray_circle.gif)
+
 ## Collision Detection Basics
 
 ## Numeric Robustness
