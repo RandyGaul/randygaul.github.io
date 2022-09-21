@@ -12,6 +12,29 @@ We will be using C++ and writing our own math to create some demonstrations and 
 
 gif here
 
+## Table of Contents
+
+* Prerequisites
+* Get a Compiler
+* Grab a Copy of tigr
+* Build and Run the Math 101 Program
+* Drawing some Lines
+* Positions (points) and Vectors
+* Drawing some Points
+* Animating
+* Transforming the Screen Space
+* Rotations
+* Unit Vectors + Normalization
+* Dot Product
+* Cross Product (aka 2D Determinant)
+* Distance and Planes
+* Bezier Curves and Lerp
+* Matrices
+* Transforms
+* Raycasting Basics
+* Collision Detection Basics
+* Toy Demo
+
 ## Prerequisites
 
 You'll need to know some basic C++ (well, more like just some basic C stuff), but not much so don't be worried. If you're not quite comfortable feel free to visit some online C++ tutorials and then come back here later to try again. At a minimum I'd recommend learning about these topics:
@@ -2023,7 +2046,7 @@ This can be useful to compose more complicated looking game objects. A great exa
 * [Plants vs Zombies](https://play.google.com/store/apps/details?id=com.ea.game.pvzfree_row)
 * [Slay the Spire](https://store.steampowered.com/app/646570/Slay_the_Spire/)
 
-## Raycasting
+## Raycasting Basics
 
 A ray is a like a line. It starts at a point and goes on infinitely in a direction. However for games actual rays aren't super useful because they usually cause a performance concern. When we test to see if a ray hits anything, if the ray goes on infinitely it will often query against shapes in the world very far away that aren't relevant. Instead it's good design to define a ray for our games as a line-segment with a finite length.
 
@@ -2276,11 +2299,7 @@ int main()
 }
 {% endhighlight %}
 
-
-
 ## Collision Detection Basics
-
-## Numeric Robustness
 
 ## Toy Demo
 
