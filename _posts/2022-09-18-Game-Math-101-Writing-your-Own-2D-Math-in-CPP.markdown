@@ -37,7 +37,7 @@ If you're on Windows I recommend to use [TDM-GCC](https://jmeubank.github.io/tdm
 
 ### Mac
 
-On Mac just download Xcode from the Asset Store. This will automatically install the command line tools for you, including `g++`. Open up the terminal application ***after you install Xcode***. You can also use the [cd command](https://www.youtube.com/watch?v=DvwWJw6Ppns) to move the terminal to another folder. Move it to your `math_101` folder.
+On Mac just download Xcode from the App Store. This will automatically install the command line tools for you, including `g++`. Open up the terminal application ***after you install Xcode***. You can also use the [cd command](https://www.youtube.com/watch?v=DvwWJw6Ppns) to move the terminal to another folder. Move it to your `math_101` folder.
 
 Most people reading this article will be using a Windows machine. One Windows they use command prompt instead of Terminal. Later when reading, if you see "command prompt" just think Terminal instead. The rest of the steps are 99% the same, despite this difference.
 
@@ -295,7 +295,7 @@ int main()
   
         v2 a = v2(200, 300);
         v2 b = v2(100, 150);
-        v2 c = v2(400, 600);
+        v2 c = v2(600, 400);
 
 		draw_point(a, color_white());
 		draw_point(b, color_white());
@@ -350,7 +350,7 @@ int main()
 
 		v2 a = v2(200, 300);
 		v2 b = v2(100, 150);
-		v2 c = v2(400, 600);
+		v2 c = v2(600, 400);
 
 		draw_point(a, color_white());
 		draw_point(b, color_white());
@@ -425,7 +425,7 @@ However, for that last function to work properly we must expand our vector opera
 v2 operator*(v2 a, float b) { return v2(a.x * b, a.y * b); }
 {% endhighlight %}
 
-In math notation we can the length of a vector v is `|v|`. When we multiply a vector v, we are multiplying each component, which in turn scales the length by the same value. We can calculate the length of a vector by utilizing the Pythagorean Theorem `a^2 + b^c = c^2`, where a, b and c are sides of a right triangle.
+In math notation the length of a vector v is `|v|`. When we multiply a vector v, we are multiplying each component, which in turn scales the length by the same value. We can calculate the length of a vector by utilizing the Pythagorean Theorem `a^2 + b^c = c^2`, where a, b and c are sides of a right triangle.
 
 ![pythagorean](/assets/pythagorean.png)
 
@@ -805,7 +805,7 @@ v2 rotate(v2 v, float a)
 {
 	float s = sinf(a);
 	float c = cosf(a);
-	return v2(c * b.x - s * b.y, s * b.x + c * b.y);
+	return v2(c * v.x - s * v.y, s * v.x + c * v.y);
 }
 {% endhighlight %}
 
@@ -874,7 +874,7 @@ v2 rotate(v2 v, float a)
 {
 	float s = sinf(a);
 	float c = cosf(a);
-	return v2(c * b.x - s * b.y, s * b.x + c * b.y);
+	return v2(c * v.x - s * v.y, s * v.x + c * v.y);
 }
 {% endhighlight %}
 
@@ -904,7 +904,7 @@ v2 rotate_point_a_around_point_b(v2 a, v2 b, float radians)
 }
 {% endhighlight %}
 
-The functions `cosf` and `sinf` are quite fast on modern processors, but still should be thought of as an order of magnitude (10x) slower than a normal float multiply. Therefor it's going to be preferable to precompute these values whenever we can and store them. A good way for our math library to make use of rotations is to make a struct representing a rotation. It can be multiplied with vectors to rotate them by an angle.
+The functions `cosf` and `sinf` are quite fast on modern processors, but still should be thought of as an order of magnitude (10x) slower than a normal float multiply. Therefore it's going to be preferable to precompute these values whenever we can and store them. A good way for our math library to make use of rotations is to make a struct representing a rotation. It can be multiplied with vectors to rotate them by an angle.
 
 {% highlight cpp %}
 struct rotation
@@ -1079,7 +1079,7 @@ This function scales the arrowhead about the origin, then rotate's about the ori
 
 ## Dot Product
 
-If you were asked what the most critical math function in call of gamedev is, what might the answer be? It better darned be the dot product! The core math function used in almost every geometric calculation ever, it's used to calculate some information about how to vectors relate to each other. It can be used to understand the angle between vectors, wether vectors are facing each other or not, and as an optimized was to compute the cos of the angle between two vectors without actually calling the `cosf` function.
+If you were asked what the most critical math function in call of gamedev is, what might the answer be? It better darned be the dot product! The core math function used in almost every geometric calculation ever, it's used to calculate some information about how two vectors relate to each other. It can be used to understand the angle between vectors, wether vectors are facing each other or not, and as an optimized was to compute the cos of the angle between two vectors without actually calling the `cosf` function.
 
 The dot product comes from the [law of cosines](http://en.wikipedia.org/wiki/Law_of_cosines). Here’s the formula:
 
@@ -1120,7 +1120,7 @@ By crossing out some redundant terms, and getting rid of the -2 on each side of 
 ```
 Equation 5
 
-u.x * v.x + u.y * v.y + u.w * v.w = |u||v| * cos(γ)
+u.x * v.x + u.y * v.y + u.z * v.z = |u||v| * cos(γ)
 ```
 
 Equation 5 is the equation for the dot product. If both u and v are unit vectors then the equation will simplify to:
@@ -1155,7 +1155,7 @@ Point 5) begs some extra attention. The sign function means like this:
 float sign(float x) { return x > 0 ? 1.0f : -1.0f; }
 {% endhighlight %}
 
-If the sign of dot(u, v) is positive the vectors are facing in the same direction. If dot(u, v) is negative, the vectors are facing away from each other! Therefor it's quite useful to have a `len_squared` function laying around that skips the `sqrtf` function; if you only need to check the sign then it's totally fine if the resulting angle is scaled.
+If the sign of dot(u, v) is positive the vectors are facing in the same direction. If dot(u, v) is negative, the vectors are facing away from each other! Therefore it's quite useful to have a `len_squared` function laying around that skips the `sqrtf` function; if you only need to check the sign then it's totally fine if the resulting angle is scaled.
 
 {% highlight cpp %}
 float len_squared(v2 v) { return dot(v, v); }
@@ -1269,7 +1269,7 @@ ax + by - c = 0
 
 ![plane_equation.png](/assets/plane_equation.png)
 
-Where (a, b) is a vector called the plane normal, while (x, y) are parameters to uniquely identify any point on the plane. c is an offset from the origin, like a distance value of the plane from the origin (scaled by the length of normal (a, b)). Often times the normal (a, b) is normalized to be a unit vector, this makes c the actual distance of the plane to the origin. In practice most times planes are used with unit normal vectors.
+Where (a, b) is a vector called the plane normal, while (x, y) are parameters to uniquely identify any point on the plane. c is an offset from the origin, like a distance value of the plane from the origin (scaled by the length of normal (a, b)). Oftentimes the normal (a, b) is normalized to be a unit vector, this makes c the actual distance of the plane to the origin. In practice most times planes are used with unit normal vectors.
 
 Finally there's a parametric form which uses a single point on the line, and a vector to another point on the line.
 
@@ -1323,7 +1323,7 @@ If the distance is positive then p is on the side of the plane the normal is fac
 
 ### Project Point onto Plane
 
-Projecting a point onto a plane means moving the point to the plane's surface by moving it the shortest distance possible. The shortest distance is along the plane's normal vector. Therefor all we do is compute the distance to the plane, then move the point along the normal by that negated distance.
+Projecting a point onto a plane means moving the point to the plane's surface by moving it the shortest distance possible. The shortest distance is along the plane's normal vector. Therefore all we do is compute the distance to the plane, then move the point along the normal by that negated distance.
 
 {% highlight cpp %}
 v2 project(halfspace h, v2 p) { return p - distance(h, p); }
@@ -1378,7 +1378,7 @@ v2 intersect(halfspace h, v2 q, v2 p)
 }
 {% endhighlight %}
 
-Next is to notice we can move q along the vector p - q to find the intersection point. But by how much should we move q? We know it's some factor between the distance of p and q from the plane. Factor means a ratio or division operator. Therefor we can calculate how far along the plane's normal p - q travels, and multiply it by this ratio to compute the intersection.
+Next is to notice we can move q along the vector p - q to find the intersection point. But by how much should we move q? We know it's some factor between the distance of p and q from the plane. Factor means a ratio or division operator. Therefore we can calculate how far along the plane's normal p - q travels, and multiply it by this ratio to compute the intersection.
 
 ![line_plane_solution.png](/assets/line_plane_solution.png)
 
@@ -1681,6 +1681,8 @@ Just be careful with these optimized versions, because small values of u or t cr
 
 In game development matrices are mostly useful for representing transformations, namely scales, rotations and translations. In 3D graphics there's also some projection matrices, but we're sticking to 2D here. A matrix stores the information needed to perform a transformation upon vectors, such as placing an object into the world, or defining a relative position to another object.
 
+### Rotation Matrices
+
 We will be using 2x2 matrices to represent rotations and scales, and later attach a position vector to create a 3x2 matrix to represent a full transform. A convenient way to look at a 2x2 matrix is like a collection of two vectors. Take a look at the matrix m.
 
 ```
@@ -1690,7 +1692,7 @@ m = [ux, vx]
     [uy, vy]
 ```
 
-Each column of m is a vector u or v. If this matrix is a rotation matrix, then u and v would be the basis vectors. u is the x-axis and v is the y-axis. When u and v are unit vectors we call m a rotation matrix. We've actually already been using rotation matrices without knowing, back in the rotation section of this article. Let's define our matrix struct type and a function to build a rotation matrix.
+Each column of m is a vector u or v. If this matrix is a rotation matrix, then u and v would be the basis vectors. u is the x-axis and v is the y-axis. When u and v are unit vectors, *and orthogonal* (at 90 degree angles from each other), we call m a rotation matrix. We've actually already been using rotation matrices without knowing, back in the rotation section of this article. Let's define our matrix struct type and a function to build a rotation matrix.
 
 {% highlight cpp %}
 struct m2
@@ -1717,9 +1719,15 @@ The mul function is defined by [matrix multiplication rules](https://en.wikipedi
 If you write down the operations by hand of multiplying a rotation matrix with a vector you'll find it to be identical to our mul function for rotations (sin + cos pair) and vectors.
 
 ```
+               x-axis
+                 v
 rotation(a) = [cos(a), -sin(a)]
-              [cos(a),  sin(a)]
+              [sin(a),  cos(a)]
+                          ^
+                        y-axis
 ```
+
+The above matrix performs a *clockwise rotation*.
 
 Matrix multiplication with vectors simply encodes a [linear combination](https://en.wikipedia.org/wiki/Linear_combination). Within that combination is our transformation (a rotation, scale, or mixture of both).
 
@@ -1729,24 +1737,460 @@ An extremely useful property of matrices is we can multiply two matrices togethe
 m2 mul(m2 a, m2 b) { m2 c; c.x = mul(a, b.x); c.y = mul(a, b.y); return c; }
 {% endhighlight %}
 
-The transpose of a matrix TODO - WORKING HERE
+The transformation of a rotation matrix can be inverted. There actually exists an inversion operation for matrices in general, but for dimensions larger than 2x2 matrices it gets fairly expensive. A bigger problem about generic inversion functions on matrices is they encourage us to black-box matrices without knowing what the various pieces actually do or represent. For example, we know we can construct a rotation matrix out of two orthogonal unit vectors by simply placing them in the first and second columns. We already have some insight about the internals here.
+
+We can realize quite intuitively how to invert a 2D rotation matrix without learning or bothering with a generic inversion function. We know that a 90 degree counter-clockwise rotation matrix looks like this:
+
+```
+[cos(a), -sin(a)]
+[sin(a),  cos(a)]
+```
+
+If we compute the sin and cos of 90 degrees, we get these values:
+
+```
+[0, -1]
+[1,  0]
+```
+
+When we multiply this matrix with a vector we can see the overall effect:
+
+```
+[0, -1][x]   [-y]
+[1,  0][y] = [ x]
+```
+
+This is actually the same effect as our earlier learnings about the skew function. If we look just at the first column of our rotation matrix we can see exactly what it's encoding when we do a multiplication with a vector. Let's look step by step.
+
+```
+1.  v---------------- x * 0, The input x component will contribute 0 to the final x component.
+   [0,  ][x] = [x * 0]
+   [ ,  ][ ] = [  ]
+
+2.      v------------ -1 * y, The input y component will contribute -1 to the final x component.
+   [ , -1][ ] = [x * 0 + -1 * y]
+   [ ,   ][y] = [  ]
+
+   [ ,   ][x] = [x * 0 + -1 * y]
+   [1,   ][ ] = [x * 1]
+3.  ^---------------- 1 * x, The input x component will contribute 1 to the final y component.
+
+   [ ,   ][x] = [x * 0 + -1 * y]
+   [ ,  0][ ] = [x * 1 +  0 * y]
+4.      ^----------- 0 * y, The input y component will contribute 0 to the final x component.
+```
+
+In steps 1-2 the linear combination for the output x-component is created. The first column in the rotatio matrix, the x-axis, decides where the new x-axis will go. A 1 in the first element means the x-axis will not change. If we move the 1 to the y-component, it means the x-axis is rotated to the y-axis. In fact, we can place any combination of -1 to 1 in the elements of the rotation matrice's first column, so long as the columns length is 1 and the y column is orthogonal -- it will be a valid rotation.
+
+How can we perform the inverted rotation? The inverted rotation of moving the x-axis to the y-axis, would be moving the x-axis back from the y-axis.
+
+```
+1.
+[0,  ]
+[1,  ]
+
+2.
+[1,  ]
+[0,  ]
+
+3.
+[ 0,  ]
+[-1,  ]
+
+4.
+[-1,  ]
+[ 0,  ]
+```
+
+Which option from 1-4 do you think might be the correct answer? Option 1 is what we already did earlier -- it moved the x-axis to the y-axis, a 90 degree rotation counter-clockwise as was promised. Option 1 definitely does not invert itself. What about option 2? If we perform the math we find this means leave the x-axis unchanged. It does no operation at all. We call this an *identity* transform. What about options 4? This simply flips the x-axis to point backwards. That leaves option 3. It will rotate the x-axis to the y-axis *but also flip it*, performing a clockwise rotation. This is our 90 degree counter-clockwise rotation inverted.
+
+Intuitively that means we can invert the y column of our rotation matrix with a negation operator as well. The full inversion of our 90-degree rotation matrix is simply to negate each element.
+
+```
+[ 0, 1]^-1   [0, -1]
+[-1, 0]    = [1,  0]
+```
+
+Great! Will this work for all rotation matrices, even non-90 degree rotations? Sadly no, simple negation won't work. However, transpose does work. Transpose simply means to make all the columns become rows, and all the rows become columns (by rotating the matrix clockwise). For any rotation it's inverse is the transpose operation (which, for 90 degree 2D rotations is equivalent to negation).
+
+```
+Rotation matrix A and it's inversion B:
+A^-1 = A^T = B
+```
 
 Here are some notable properties of rotation matrices:
 
-1. non commutative
-2. transpose is the inverse
+1. Multiplication is non-commutative. That means A * B != B * A. If you switch around the order of operations *you will get a different effect*. This goes back to our old rule, listed next as number 2.
+2. Rotations are always performed about the origin. Period. It's possible to encode a larger dimensioned matrix than a mere 2x2 matrix that concatenate many rotations, translations and scales together - but each individual rotation encoded within will still have been perform about the origin. Even if the transform encodes first a translation, then a rotation, then an inverse translation (rotating about a point), the rotation itself was still done about the origin at the (despite it being temporarily shifted).
+3. The inverse of a rotation matrix is the transposition of the rotation matrix.
 
-Our 2x2 matrix, m2, can also encode a scaling factor along the x-axis or y-axis.
+Going back to m2 struct we can retrive the x-axis or y-axis of a rotation matrix any time by simply getting the x column or y column.
 
-1. commutative
-2. inverse flips the scale factor
+{% highlight cpp %}
+m2 = m2_rotation(angle);
+v2 x_axis = m2.x;
+v2 y_axis = m2.y;
+{% endhighlight %}
+
+### Scale Matrices
+
+Our 2x2 matrix, m2, can also encode a scaling factor along the x-axis or y-axis. A quick note on some properties of scale matrices.
+
+1. They are commutative. Since a scale matrix does not rotate any axes, they act like scalar multiples. A * B = B * A.
+2. The inverse of a scale operation is to divide by the same magnitude (fancy word for length/value).
+
+The scale of our 2x2 matrices will be encoded as the length of the x-column or the y-column, representing scaling along the x-axes and y-axes respectively.
+
+```
+[xx, yx]
+[xy, yy]
+
+x-column/x-axis = (xx, xy)
+y-column/y-axis = (yx, yy)
+
+Scale along x-axis = |(xx, xy)|
+Scale along y-axis = |(yx, yy)|
+```
+
+Going back to our m2 struct, we can add functionality for creating a scale matrix.
+
+{% highlight cpp %}
+m2 m2_identity()
+{
+	m2 m;
+	m.x = v2(1, 0);
+	m.y = v2(0, 1);
+	return m;
+}
+
+m2 m2_scale(float x_scale, float y_scale)
+{
+	m2 m = m2_identity();
+	m.x *= x_scale;
+	m.y *= y_scale;
+	return m;
+}
+{% endhighlight %}
+
+As hinted in the previous section on Rotation Matrices, the identity matrix is composed of a series of 1's along the diagonal. This simply leaves each respective component unchanged during multiplication. As promised, scaling is just scaling individual axes of the matrix.
+
+### Translations
+
+Our 2x2 m2 matrix is not designed to handle translations. However, we can augment our m2 struct by defining a wrapping struct that encompasses one more vector to store translation information. This would be a 3x2 matrix; we can call it m3x2.
+
+{% highlight cpp %}
+struct m3x2
+{
+	m2 m;
+	v2 p;
+};
+{% endhighlight %}
+
+Translations don't require too much explanation here -- you're already familiar with them! The key thing to note here is order of operations. When representing a full m3x2 matrix you can encode translations, rotations and scales all together. However, when mixing these operations you lose commutativity. Here comes another nice rule to sear into brain. Ssss...
+
+* To undo a series of transform operations, you must not only invert each operation, but also *reverse the order of operations*. Example: (A * B * C)-1 = C^-1 * B^-1 * C^-1
+
+And finally, a function to build a transformation matrix.
+
+{% highlight cpp %}
+m3x2 make_translation(v2 p)
+{
+	m3x2 m;
+	m.m = m2_identity();
+	m.p = p;
+	return m;
+};
+{% endhighlight %}
 
 ## Transforms
 
+With the nice m3x2 struct we defined in the previous section we can represent almost any kind of 2D transformation we might need, especially when we're thinking about the three most common ones: scaling, rotating and translating.
+
+First up, let's list down a series of `make_*` functions for building our m3x2 transormation matrices, including `make_translation` from the previous section.
+
+{% highlight cpp %}
+m3x2 make_identity() { m3x2 m; m.m = m2_identity; m.p = v2(0, 0); return m; }
+m3x2 make_translation(v2 p) { m3x2 m; m.m = m2_identity(); m.p = p; return m; };
+m3x2 make_translation(float x, float y) { return make_translation(v2(x, y)); }
+m3x2 make_scale(v2 scale) { m3x2 m = make_identity(); m.x *= scale.x; m.y *= scale.y; return m; }
+m3x2 make_scale(float scale_x, float scale_y) { return make_scale(v2(scale_x, scale_y)); }
+m3x2 make_rotation(float radians) { m3x2 m; m.m = m2_rotation(radians); m.p = v2(0, 0); return m; }
+m3x2 make_TSR(v2 p, v2 s, float radians)
+{
+	rotation r = sincos(radians);
+	m3x2 m;
+	m.x = v2(r.c, -r.s) * s.x;
+	m.y = v2(r.s, r.c) * s.y;
+	m.p = p;
+}
+{% endhighlight %}
+
+The really interesting function is `make_TSR`, it stands for rotate, then scale, then translate, in that order. It's a composition of all three kinds of transformations. Whenever we multiply it with a vector, the vector will be first rotated *about the origin*, then scaled *about the origin*, then translated. Here's the mul function for another vector.
+
+{% highlight cpp %}
+v2 mul(m3x2 m, v2 v) { return mul(m.m, v) + m.p; }
+{% endhighlight %}
+
+Similarly we can follow the rules of matrix multiplication and write down how to concatenate two m3x2 matrices with a mul function.
+
+{% highlight cpp %}
+// Transform b by a.
+m3x2 mul(m3x2 a, m3x2 b) { m3x2 c; c.m = mul(a.m, b.m); c.p = mul(a.m, b.p) + a.p; return c; }
+{% endhighlight %}
+
+The order of operations on the translation is quite important here. We want to transform b by a, which means we want to rotate a, then scale a, then translate a. The mul with a.m does the scale/rotation together in a single m2, and the translation happens afterwards.
+
+### Transforming Objects
+
+Usually in games you have two kinds of objects in the world: implicitly defined shapes and meshes. When I say it merely means an array of vertices. Sometimes these vertices are stored as triangle triplets, and somethings they are accompanied by an array of triangle indices. For 2D we can just stick the former: merely an array of vertices (regardless of whether they are individual points, line segments, or triangles). Think of a mesh as an array of v2's, like the vertices of a polygon.
+
+An implicitly defined shape reduces the amount of information needed to represent a shape down to a convenient minimum, like our aabb shape. Other common shapes include circles, capsules, and rays.
+
+Say we have a mesh definition like so:
+
+{% highlight cpp %}
+struct mesh
+{
+	array<v2> vertices;
+};
+{% endhighlight %}
+
+Transforming this mesh with an m3x2 is an extremely common operation; simply loop over all vertices and mul them with the m3x2. This can rotate, then scale, then translate all the vertices. This is such a common thing to do that we usually attach a dedicated m3x2 onto our objects with a mesh.
+
+{% highlight cpp %}
+struct game_object
+{
+	m3x2 transform;
+	array<v2> mesh;
+};
+{% endhighlight %}
+
+As a memory optimization it's common to store a single copy of a mesh in memory, and have different objects keep a pointer to the mesh and a transform. The mesh vertices themselves, as they sit in memory, are usually stoerd in what's called *model space*. This just means the vertices are likely very close to the origin and haven't been rotated/scaled/translated into the world yet.
+	
+To draw one of the meshes usually the vertices are copied over to the GPU (graphics processing unit). In tigr we just set pixels onto the screen directly. Whenever we want to draw a mesh we can loop over the vertices, mul them in the loop and use temporary v2 variables to represent the transformed verts. Then we draw with those temporary variables. The original source mesh vertices are as if they are in "read-only mode".
+
+{% highlight cpp %}
+struct game_object
+{
+	m3x2 transform;
+	array<v2>* mesh;
+};
+
+// This is just example code -- with tigr we aren't sending meshes to the GPU. But, for most games
+// this is an extremely common operation. We just use tigr for a nice and simple learning environment.
+void send_triangle_mesh_to_gpu(game_object* o)
+{
+	v2* vertices = o->mesh.data();
+	int size = o->mesh.size();
+	m3x2 m = o->m;
+	for (int i = 0; i < size; I += 3) {
+		v2 a = vertices[i];
+		v2 b = vertices[i + 1];
+		v2 c = vertices[i + 2];
+		a = mul(m, a);
+		b = mul(m, b);
+		c = mul(m, c);
+		gpu_context->add_triangle(a, b, c);
+	}
+}
+{% endhighlight %}
+	
+For an implicitly defined shape we can do the same, but scaling might be a bit difficult. For example how can we scale a circle along the x-axis but not the y-axis? It's a bit of a condundrum on what to do here. Nonetheless we can make a decision.
+
+{% highlight cpp %}
+struct circle
+{
+	v2 p;
+	float r;
+};
+
+circle mul(m3x2 m, circle c)
+{
+	c.r *= len(m.x);
+	c.p = mul(m, c.p);
+	return c;
+}
+{% endhighlight %}
+
+In the above example we chose to use the x-axis for scaling circles. How you decide to handle this case in your game is up to you. You could use the y-axis, you could use the min or max of both axes, or even the average of both axes.
+
+### Object Heirarchies
+
+It's quite common to give your game_object (or equivalence) a transform *and a parent*. The parent would be a reference, pointer or id to a parenting game object. The parent has it's own transform, while the game_object would have it's transform be defined relative to the parent's transform. If a game object has no parent, it's transform is absolute, and not relative.
+
+This can be useful to compose more complicated looking game objects. A great example would be 2D games that use skeletal animation for the animations. Each "bone" in a skeleton is merely a transformation matrix (like an m3x2). An image or mesh is placed into each bone, which each bone transformed relative to it's parent. A good way to learn about what skeletal animations look like is to check out these cool live demos by [Spine software](http://esotericsoftware.com/spine-demos). Some examples of games that use skeletal animation would be:
+
+* [Plants vs Zombies](https://play.google.com/store/apps/details?id=com.ea.game.pvzfree_row)
+* [Slay the Spire](https://store.steampowered.com/app/646570/Slay_the_Spire/)
+
 ## Raycasting
+
+A ray is a like a line. It starts at a point and goes on infinitely in a direction. However for games actual rays aren't super useful because they usually cause a performance concern. When we test to see if a ray hits anything, if the ray goes on infinitely it will often query against shapes in the world very far away that aren't relevant. Instead it's good design to define a ray for our games as a line-segment with a finite length.
+
+{% highlight cpp %}
+struct ray
+{
+	v2 p;    // Start position.
+	v2 d;    // Direction of the ray (normalized)
+	float t; // Distance along d the ray travels.
+	v2 endpoint() { return p + d * t; }
+};
+{% endhighlight %}
+
+It's quite important to keep the ray direction normalized for numeric stability during ray test operations. [Here's a thread](https://github.com/RandyGaul/cute_headers/issues/30) talking about this sort of thing in detail.
+
+The equation for a ray is merely the parametric form of a line with a condition attached.
+
+```
+p is the start point of the ray
+d is the ray direction vector (normalized)
+x is an input scalar
+
+p' = p + d * x
+x >= 0
+```
+
+In our code we apply an extra condition, namely that the ray goes from t = 0 to t = N. So we can rewrite the definition more like this.
+
+```
+p' = p + d * x
+x >= 0
+x <= t // t comes from our ray struct, defining the endpoint of the ray's line segment
+```
+
+We can cast rays and hit-test all kinds of shapes. We will cover some shapes here:
+
+1. Ray to circle
+2. Ray to polygon
+
+### Ray to Circle
+
+Deriving the ray to circle routine is much our other exercises: write down some equations and plug them into each other.
+
+```
+q : input point
+c : center of circle
+t : distance along the ray that might hit the circle
+
+sqrt((q - c)(q - c)) = r
+p + d * t
+
+rewrite circle equation
+=>
+|q - c|^2 = r^2
+
+substitute ray into q
+=>
+|p + d * t - c|^2 = r^2
+
+solve for t (time of impact)
+(p + d * t - c)(p + d * t - c) - r^2 = 0
+((p - c) + t * d)((p - c) + t * d) - r^2 = 0
+e = p - c
+(e + t * d)(e + t * d) - r^2 = 0
+dot(e, e) + t * dot(e, d) + t * dot(e, d) + t^2 * dot(d, d) - r^2 = 0
+t^2 * dot(d, d) + 2t * dot(e, d) + dot(e, e) - r^2 = 0
+
+quadratic equation in t
+t = (-b ± sqrt(b * b - 4ac))/(2a)
+a = dot(d, d)
+b = 2 * dot(d, e)
+c = dot(e, e) - r^2
+
+The discriminant (part in the sqrt) tells information based on the sign.
+If it's positive we have an intersection.
+```
+
+{% highlight cpp %}
+bool raycast_circle(ray r, circle c)
+{
+	v2 c = b.c;
+	v2 p = a.p;
+	v2 e = p - c;
+	v2 d = a.d;
+	float a = dot(d, d);
+	float b = 2.0f * dot(e, d);
+	float c = dot(e, e);
+	float t = a.t;
+	float rr = b.r * b.r;
+	float discriminant = b * b - 4.0f * a * c;
+	return discriminant > 0;
+}
+{% endhighlight %}
+
+The first obvious optimization is that we know d to be of unit length, so dot(d, d) is 1.
+
+{% highlight cpp %}
+bool raycast_circle(ray r, circle c)
+{
+	v2 p = a.p;
+	v2 e = p - c.p;
+	v2 d = a.d;
+	float rr = b.r * b.r;
+	float b = 2.0f * dot(e, d);
+	float c = dot(e, e) - rr;
+	float discriminant = b * b - 4.0f * c;
+	return discriminant > 0;
+}
+{% endhighlight %}
+
+Another thing is to use a different form of the quadratic equation where b is doubled. This can remove the extra constant multiply by four and by two. This also slightly increases numeric stability by keeping the numbers a little lower.
+
+```
+t^2 * dot(d, d) + 2t * dot(e, d) + dot(e, e) - r^2 = 0
+t = (-b ± sqrt(b * b - ac))/a
+a = 1
+b = dot(d, e)
+c = dot(e, e) - r^2
+```
+
+{% highlight cpp %}
+bool raycast_circle(ray r, circle c)
+{
+	v2 p = a.p;
+	v2 e = p - c.p;
+	v2 d = a.d;
+	float rr = b.r * b.r;
+	float b = dot(e, d);
+	float c = dot(e, e) - rr;
+	float discriminant = b * b - c;
+	return discriminant > 0;
+}
+{% endhighlight %}
+
+Lastly, it's generally useful to add the hit point and normal to the output of any raycast function. The normal describes the direction the surface is facing where the ray hit. This can be used to inform where bullets should bounce, or how players are standing on top of objects. Simply solving for t and plugging it into the ray equation p + d * t will give us the hit location. But first, we must make sure t is within the bounds of the line segment. If t is negative it means the ray started inside the sphere. Additionally, we ignore the ± and only consider the earliest hit time, which would be the - case in our quadratic solution `t = -b - sqrt(b * b - c)`.
+
+{% highlight cpp %}
+struct raycast
+{
+	float t; // Time of impact.
+	v2 n; // Normal of the surface at impact (unit length).
+};
+
+bool raycast_circle(ray r, circle c, raycast* out)
+{
+	v2 e = a.p - c.p;
+	float rr = b.r * b.r;
+	float b = dot(e, a.d);
+	float c = dot(e, e) - rr;
+	float discriminant = b * b - c;
+	bool missed_circle = discriminant < 0;
+	if (missed_circle) return false;
+	t = -b - sqrtf(discriminant);
+	if (t >= 0 && t <= r.t) {
+		out->t = t;
+		v2 impact = r.p + r.d * t;
+		out->n = norm(impact - c.p);
+	} else {
+		return 0;
+	}
+}
+{% endhighlight %}
 
 ## Collision Detection Basics
 
-## Numeric Stability
+## Numeric Robustness
+
+## Toy Demo
 
 THIS POST IS A WIP
