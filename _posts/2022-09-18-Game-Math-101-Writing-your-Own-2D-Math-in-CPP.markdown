@@ -2065,7 +2065,7 @@ We can cast rays and hit-test all kinds of shapes. We will cover some shapes her
 
 ### Ray to Circle
 
-Deriving the ray to circle routine is much our other exercises: write down some equations and plug them into each other.
+Deriving the ray to circle routine is much like our other exercises: write down some equations and plug them into each other.
 
 ```
 q : input point
@@ -2161,11 +2161,25 @@ bool raycast_circle(ray r, circle c)
 Lastly, it's generally useful to add the hit point and normal to the output of any raycast function. The normal describes the direction the surface is facing where the ray hit. This can be used to inform where bullets should bounce, or how players are standing on top of objects. Simply solving for t and plugging it into the ray equation p + d * t will give us the hit location. But first, we must make sure t is within the bounds of the line segment. If t is negative it means the ray started inside the sphere. Additionally, we ignore the ± and only consider the earliest hit time, which would be the - case in our quadratic solution `t = -b - sqrt(b * b - c)`.
 
 {% highlight cpp %}
-struct raycast
+struct raycast_output
 {
 	float t; // Time of impact.
-	v2 n; // Normal of the surface at impact (unit length).
+	v2 n;    // Normal of the surface at impact (unit length).
 };
+
+struct ray
+{
+	ray() { }
+	ray(v2 p, v2 d, float t) { this->p = p; this->d = d; this->t = t; }
+	v2 p;    // Start position.
+	v2 d;    // Direction of the ray (normalized)
+	float t; // Distance along d the ray travels.
+	v2 endpoint() { return p + d * t; }
+	v2 impact(raycast_output hit_data) { return p + d * hit_data.t; }
+};
+
+// Reflect vector d across vector n. See: http://paulbourke.net/geometry/reflected/
+v2 reflect(v2 d, v2 n) { return d - n * 2 * dot(d, n); }
 
 bool raycast_circle(ray r, circle c, raycast* out)
 {
@@ -2188,6 +2202,81 @@ bool raycast_circle(ray r, circle c, raycast* out)
 {% endhighlight %}
 
 ![ray_circle.gif](/assets/ray_circle.gif)
+	
+Here's main.cpp for the above demo.
+
+{% highlight cpp %}
+#include "tigr.h"
+#include "math_101.h"
+#include "draw.h"
+
+circle circles[] = {
+	circle(-100, 0, 20),
+	circle(-200, 50, 30),
+	circle(-150, 150, 70),
+	circle(50, 200, 100),
+	circle(200, -150, 70),
+	circle(0, -100, 20),
+	circle(-150, -200, 100),
+};
+
+void cast_ray(ray r, int depth = 0, int depth_max = 100)
+{
+	if (depth == depth_max) {
+		draw_vector(r.p, r.endpoint() - r.p, color_white());
+	}
+	float min_t = FLT_MAX;
+	raycast_output best_hit;
+	for (int i = 0; i < sizeof(circles) / sizeof(*circles); ++i) {
+		raycast_output hit_data;
+		bool hit = raycast(r, circles[i], &hit_data);
+		if (hit && depth < depth_max) {
+			if (hit_data.t < min_t) {
+				min_t = hit_data.t;
+				best_hit = hit_data;
+			}
+		}
+	}
+	if (min_t != FLT_MAX) {
+		v2 hit = r.impact(best_hit);
+		draw_line(r.p, hit, color_white());
+		r.d = reflect(r.d, best_hit.n);
+		r.p = hit;
+		r.t -= best_hit.t;
+		cast_ray(r, depth + 1, depth_max);
+	} else {
+		draw_vector(r.p, r.endpoint() - r.p, color_white());
+	}
+}
+
+int main()
+{
+	screen = tigrWindow(640, 480, "Math 101", 0);
+
+	float t = 0;
+	while (!tigrClosed(screen) && !tigrKeyDown(screen, TK_ESCAPE)) {
+		float dt = tigrTime();
+		t += dt;
+		tigrClear(screen, color_black());
+
+		for (int i = 0; i < sizeof(circles) / sizeof(*circles); ++i) {
+			draw_circle(circles[i], color_white());
+		}
+
+		v2 m = mouse();
+		ray r = ray(v2(0, 0), norm(m), 25.0f + (cosf(t * 2.0f) + 1.0f) * 0.5f * 500.0f);
+		cast_ray(r);
+
+		tigrUpdate(screen);
+	}
+
+	tigrFree(screen);
+
+	return 0;
+}
+{% endhighlight %}
+
+
 
 ## Collision Detection Basics
 
