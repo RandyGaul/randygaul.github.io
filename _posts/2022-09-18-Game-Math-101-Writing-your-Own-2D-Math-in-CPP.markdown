@@ -2025,8 +2025,172 @@ This can be useful to compose more complicated looking game objects. A great exa
 
 ## Raycasting
 
+A ray is a like a line. It starts at a point and goes on infinitely in a direction. However for games actual rays aren't super useful because they usually cause a performance concern. When we test to see if a ray hits anything, if the ray goes on infinitely it will often query against shapes in the world very far away that aren't relevant. Instead it's good design to define a ray for our games as a line-segment with a finite length.
+
+{% highlight cpp %}
+struct ray
+{
+	v2 p;    // Start position.
+	v2 d;    // Direction of the ray (normalized)
+	float t; // Distance along d the ray travels.
+	v2 endpoint() { return p + d * t; }
+};
+{% endhighlight %}
+
+It's quite important to keep the ray direction normalized for numeric stability during ray test operations. [Here's a thread](https://github.com/RandyGaul/cute_headers/issues/30) talking about this sort of thing in detail.
+
+The equation for a ray is merely the parametric form of a line with a condition attached.
+
+```
+p is the start point of the ray
+d is the ray direction vector (normalized)
+x is an input scalar
+
+p' = p + d * x
+x >= 0
+```
+
+In our code we apply an extra condition, namely that the ray goes from t = 0 to t = N. So we can rewrite the definition more like this.
+
+```
+p' = p + d * x
+x >= 0
+x <= t // t comes from our ray struct, defining the endpoint of the ray's line segment
+```
+
+We can cast rays and hit-test all kinds of shapes. We will cover some shapes here:
+
+1. Ray to circle
+2. Ray to polygon
+
+### Ray to Circle
+
+Deriving the ray to circle routine is much our other exercises: write down some equations and plug them into each other.
+
+```
+q : input point
+c : center of circle
+t : distance along the ray that might hit the circle
+
+sqrt((q - c)(q - c)) = r
+p + d * t
+
+rewrite circle equation
+=>
+|q - c|^2 = r^2
+
+substitute ray into q
+=>
+|p + d * t - c|^2 = r^2
+
+solve for t (time of impact)
+(p + d * t - c)(p + d * t - c) - r^2 = 0
+((p - c) + t * d)((p - c) + t * d) - r^2 = 0
+e = p - c
+(e + t * d)(e + t * d) - r^2 = 0
+dot(e, e) + t * dot(e, d) + t * dot(e, d) + t^2 * dot(d, d) - r^2 = 0
+t^2 * dot(d, d) + 2t * dot(e, d) + dot(e, e) - r^2 = 0
+
+quadratic equation in t
+t = (-b ± sqrt(b * b - 4ac))/(2a)
+a = dot(d, d)
+b = 2 * dot(d, e)
+c = dot(e, e) - r^2
+
+The discriminant (part in the sqrt) tells information based on the sign.
+If it's positive we have an intersection.
+```
+
+{% highlight cpp %}
+bool raycast_circle(ray r, circle c)
+{
+	v2 c = b.c;
+	v2 p = a.p;
+	v2 e = p - c;
+	v2 d = a.d;
+	float a = dot(d, d);
+	float b = 2.0f * dot(e, d);
+	float c = dot(e, e);
+	float t = a.t;
+	float rr = b.r * b.r;
+	float discriminant = b * b - 4.0f * a * c;
+	return discriminant > 0;
+}
+{% endhighlight %}
+
+The first obvious optimization is that we know d to be of unit length, so dot(d, d) is 1.
+
+{% highlight cpp %}
+bool raycast_circle(ray r, circle c)
+{
+	v2 p = a.p;
+	v2 e = p - c.p;
+	v2 d = a.d;
+	float rr = b.r * b.r;
+	float b = 2.0f * dot(e, d);
+	float c = dot(e, e) - rr;
+	float discriminant = b * b - 4.0f * c;
+	return discriminant > 0;
+}
+{% endhighlight %}
+
+Another thing is to use a different form of the quadratic equation where b is doubled. This can remove the extra constant multiply by four and by two. This also slightly increases numeric stability by keeping the numbers a little lower.
+
+```
+t^2 * dot(d, d) + 2t * dot(e, d) + dot(e, e) - r^2 = 0
+t = (-b ± sqrt(b * b - ac))/a
+a = 1
+b = dot(d, e)
+c = dot(e, e) - r^2
+```
+
+{% highlight cpp %}
+bool raycast_circle(ray r, circle c)
+{
+	v2 p = a.p;
+	v2 e = p - c.p;
+	v2 d = a.d;
+	float rr = b.r * b.r;
+	float b = dot(e, d);
+	float c = dot(e, e) - rr;
+	float discriminant = b * b - c;
+	return discriminant > 0;
+}
+{% endhighlight %}
+
+Lastly, it's generally useful to add the hit point and normal to the output of any raycast function. The normal describes the direction the surface is facing where the ray hit. This can be used to inform where bullets should bounce, or how players are standing on top of objects. Simply solving for t and plugging it into the ray equation p + d * t will give us the hit location. But first, we must make sure t is within the bounds of the line segment. If t is negative it means the ray started inside the sphere. Additionally, we ignore the ± and only consider the earliest hit time, which would be the - case in our quadratic solution `t = -b - sqrt(b * b - c)`.
+
+{% highlight cpp %}
+struct raycast
+{
+	float t; // Time of impact.
+	v2 n; // Normal of the surface at impact (unit length).
+};
+
+bool raycast_circle(ray r, circle c, raycast* out)
+{
+	v2 e = a.p - c.p;
+	float rr = b.r * b.r;
+	float b = dot(e, a.d);
+	float c = dot(e, e) - rr;
+	float discriminant = b * b - c;
+	bool missed_circle = discriminant < 0;
+	if (missed_circle) return false;
+	t = -b - sqrtf(discriminant);
+	if (t >= 0 && t <= r.t) {
+		out->t = t;
+		v2 impact = r.p + r.d * t;
+		out->n = norm(impact - c.p);
+	} else {
+		return 0;
+	}
+}
+{% endhighlight %}
+
 ## Collision Detection Basics
 
-## Numeric Stability
+## Numeric Robustness
+
+## Toy Demo
 
 THIS POST IS A WIP
