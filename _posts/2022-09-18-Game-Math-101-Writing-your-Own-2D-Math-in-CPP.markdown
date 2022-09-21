@@ -1378,7 +1378,7 @@ p' = p + q * t
 v2 intersect(halfspace h, v2 p, v2 q)
 {
 	float t = (h.c - dot(h.n, p))) / dot(h.n, q);
-	return q + p + q * t;
+	return p + q * t;
 }
 {% endhighlight %}
 
@@ -1414,7 +1414,7 @@ v2 intersect(halfspace h, v2 q, v2 p)
 {
 	float dq = distance(h, q);
 	float dp = distance(h, p);
-	return (p - q) * (dq / (dq - dp));
+	return q + (p - q) * (dq / (dq - dp));
 }
 {% endhighlight %}
 
