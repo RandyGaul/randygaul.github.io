@@ -12,6 +12,29 @@ We will be using C++ and writing our own math to create some demonstrations and 
 
 gif here
 
+## Table of Contents
+
+* Prerequisites
+* Get a Compiler
+* Grab a Copy of tigr
+* Build and Run the Math 101 Program
+* Drawing some Lines
+* Positions (points) and Vectors
+* Drawing some Points
+* Animating
+* Transforming the Screen Space
+* Rotations
+* Unit Vectors + Normalization
+* Dot Product
+* Cross Product (aka 2D Determinant)
+* Distance and Planes
+* Bezier Curves and Lerp
+* Matrices
+* Transforms
+* Raycasting Basics
+* Collision Detection Basics
+* Toy Demo
+
 ## Prerequisites
 
 You'll need to know some basic C++ (well, more like just some basic C stuff), but not much so don't be worried. If you're not quite comfortable feel free to visit some online C++ tutorials and then come back here later to try again. At a minimum I'd recommend learning about these topics:
@@ -1355,7 +1378,7 @@ p' = p + q * t
 v2 intersect(halfspace h, v2 p, v2 q)
 {
 	float t = (h.c - dot(h.n, p))) / dot(h.n, q);
-	return q + p + q * t;
+	return p + q * t;
 }
 {% endhighlight %}
 
@@ -1391,7 +1414,7 @@ v2 intersect(halfspace h, v2 q, v2 p)
 {
 	float dq = distance(h, q);
 	float dp = distance(h, p);
-	return (p - q) * (dq / (dq - dp));
+	return q + (p - q) * (dq / (dq - dp));
 }
 {% endhighlight %}
 
@@ -2023,7 +2046,7 @@ This can be useful to compose more complicated looking game objects. A great exa
 * [Plants vs Zombies](https://play.google.com/store/apps/details?id=com.ea.game.pvzfree_row)
 * [Slay the Spire](https://store.steampowered.com/app/646570/Slay_the_Spire/)
 
-## Raycasting
+## Raycasting Basics
 
 A ray is a like a line. It starts at a point and goes on infinitely in a direction. However for games actual rays aren't super useful because they usually cause a performance concern. When we test to see if a ray hits anything, if the ray goes on infinitely it will often query against shapes in the world very far away that aren't relevant. Instead it's good design to define a ray for our games as a line-segment with a finite length.
 
@@ -2065,7 +2088,7 @@ We can cast rays and hit-test all kinds of shapes. We will cover some shapes her
 
 ### Ray to Circle
 
-Deriving the ray to circle routine is much our other exercises: write down some equations and plug them into each other.
+Deriving the ray to circle routine is much like our other exercises: write down some equations and plug them into each other.
 
 ```
 q : input point
@@ -2161,11 +2184,25 @@ bool raycast_circle(ray r, circle c)
 Lastly, it's generally useful to add the hit point and normal to the output of any raycast function. The normal describes the direction the surface is facing where the ray hit. This can be used to inform where bullets should bounce, or how players are standing on top of objects. Simply solving for t and plugging it into the ray equation p + d * t will give us the hit location. But first, we must make sure t is within the bounds of the line segment. If t is negative it means the ray started inside the sphere. Additionally, we ignore the ± and only consider the earliest hit time, which would be the - case in our quadratic solution `t = -b - sqrt(b * b - c)`.
 
 {% highlight cpp %}
-struct raycast
+struct raycast_output
 {
 	float t; // Time of impact.
-	v2 n; // Normal of the surface at impact (unit length).
+	v2 n;    // Normal of the surface at impact (unit length).
 };
+
+struct ray
+{
+	ray() { }
+	ray(v2 p, v2 d, float t) { this->p = p; this->d = d; this->t = t; }
+	v2 p;    // Start position.
+	v2 d;    // Direction of the ray (normalized)
+	float t; // Distance along d the ray travels.
+	v2 endpoint() { return p + d * t; }
+	v2 impact(raycast_output hit_data) { return p + d * hit_data.t; }
+};
+
+// Reflect vector d across vector n. See: http://paulbourke.net/geometry/reflected/
+v2 reflect(v2 d, v2 n) { return d - n * 2 * dot(d, n); }
 
 bool raycast_circle(ray r, circle c, raycast* out)
 {
@@ -2187,10 +2224,228 @@ bool raycast_circle(ray r, circle c, raycast* out)
 }
 {% endhighlight %}
 
+![ray_circle.gif](/assets/ray_circle.gif)
+	
+Here's main.cpp for the above demo.
+
+{% highlight cpp %}
+#include "tigr.h"
+#include "math_101.h"
+#include "draw.h"
+
+circle circles[] = {
+	circle(-100, 0, 20),
+	circle(-200, 50, 30),
+	circle(-150, 150, 70),
+	circle(50, 200, 100),
+	circle(200, -150, 70),
+	circle(0, -100, 20),
+	circle(-150, -200, 100),
+};
+
+void cast_ray(ray r, int depth = 0, int depth_max = 100)
+{
+	if (depth == depth_max) {
+		draw_vector(r.p, r.endpoint() - r.p, color_white());
+	}
+	float min_t = FLT_MAX;
+	raycast_output best_hit;
+	for (int i = 0; i < sizeof(circles) / sizeof(*circles); ++i) {
+		raycast_output hit_data;
+		bool hit = raycast(r, circles[i], &hit_data);
+		if (hit && depth < depth_max) {
+			if (hit_data.t < min_t) {
+				min_t = hit_data.t;
+				best_hit = hit_data;
+			}
+		}
+	}
+	if (min_t != FLT_MAX) {
+		v2 hit = r.impact(best_hit);
+		draw_line(r.p, hit, color_white());
+		r.d = reflect(r.d, best_hit.n);
+		r.p = hit;
+		r.t -= best_hit.t;
+		cast_ray(r, depth + 1, depth_max);
+	} else {
+		draw_vector(r.p, r.endpoint() - r.p, color_white());
+	}
+}
+
+int main()
+{
+	screen = tigrWindow(640, 480, "Math 101", 0);
+
+	float t = 0;
+	while (!tigrClosed(screen) && !tigrKeyDown(screen, TK_ESCAPE)) {
+		float dt = tigrTime();
+		t += dt;
+		tigrClear(screen, color_black());
+
+		for (int i = 0; i < sizeof(circles) / sizeof(*circles); ++i) {
+			draw_circle(circles[i], color_white());
+		}
+
+		v2 m = mouse();
+		ray r = ray(v2(0, 0), norm(m), 25.0f + (cosf(t * 2.0f) + 1.0f) * 0.5f * 500.0f);
+		cast_ray(r);
+
+		tigrUpdate(screen);
+	}
+
+	tigrFree(screen);
+
+	return 0;
+}
+{% endhighlight %}
+
+## Ray to Polygon
+
+We've actually covered this topic already back in the **Distance and Planes** section, at least, mostly covered it by calculating distances of points to planes, and intersection of line segment to plane. From Christer Ericson's excellent book Real-Time Collision Detection he explains a great algorithm for raycasting against a polygon.
+
+Ericson describes the process as continually slicing a line segment with cutting planes, where each plane is a face of the polygon. If the ray is completely sliced away (length becomes 0 or negative) there is no intersection. Otherwise the final line segment contains the start/endpoints for the ray intersections. Special care must be taken to avoid dividing by zero. The image below shows the step-by-step process of clipping a ling segment against invidual planes of a polygon.
+
+![line_clip_poly.png](/assets/line_clip_poly.png)
+
+The code is rather straightforward. Compute the numerator and denominator in our earlier discussions of line segment to plane, avoid divide by zero issues, and keep track of a lo/hi time of intersection. Just be sure that the polygon is in counter-clockwise vertex order, and is a valid [convex hull](https://en.wikipedia.org/wiki/Convex_hull). We'll go over an algorithm for building 2D convex hulls later.
+
+{% highlight cpp %}
+#define POLYGON_MAX_VERTS 8
+
+struct polygon
+{
+	int count = 0;
+	v2 verts[POLYGON_MAX_VERTS];
+	v2 norms[POLYGON_MAX_VERTS];
+	void compute_norms()
+	{
+		for (int i = 0; i < count; ++i) {
+			int j = i + 1 < count ? i + 1 : 0;
+			norms[i] = norm(skew(verts[i] - verts[j]));
+		}
+	}
+};
+
+bool raycast(ray r, polygon poly, raycast_output* out)
+{
+	float lo = 0;
+	float hi = r.t;
+	int index = ~0;
+
+	for (int i = 0; i < poly.count; ++i) {
+		// Calculate distance of point to plane.
+		// This is a slight variation of dot(n, p) - c, where instead of pre-computing c as scalar,
+		// we form a vector pointing from the ray's start point to a point on the plane. This is
+		// functionally equivalent to dot(n, p) - c, but we don't have to store c inside of our poly.
+		float distance = dot(poly.norms[i], poly.verts[i] - r.p);
+		float denominator = dot(poly.norms[i], r.d);
+		if (denominator == 0) {
+			// Ray direction is parallel to this poly's face plane.
+			// If the ray's start direction is outside the plane we know there's no intersection.
+			if (distance > 0) return false;
+		} else {
+			float t = distance / denominator;
+			if (denominator < 0) {
+				// Ray is entering the plane.
+				lo = max(lo, t);
+				index = i;
+			}
+			else hi = min(hi, t); // Ray is exiting the plane.
+			bool ray_clipped_away = lo > hi;
+			if (ray_clipped_away) return false;
+		}
+	}
+
+	if (index != ~0) {
+		out->t = lo;
+		out->n = poly.norms[index];
+		return true;
+	} else {
+		return false;
+	}
+}
+{% endhighlight %}
+
 ## Collision Detection Basics
 
-## Numeric Robustness
+### Implicit Shapes
+
+### Convex Hull
+
+{% highlight cpp %}
+// Based on Andrew's Algorithm from Ericson's Real-Time Collision Detection book.
+int convex_hull(v2* verts, int count)
+{
+	count = min(count, POLYGON_MAX_VERTS);
+	if (count < 3) {
+		return 0;
+	}
+
+	// Sort lexicographically (on x-axis, then y-axis).
+	for (int i = 0; i < count; ++i) {
+		int lo = i;
+		for (int j = i+1; j < count; ++j) {
+			if (verts[j].x < verts[lo].x) {
+				lo = j;
+			} else if (verts[j].x == verts[lo].x && verts[j].y < verts[lo].y) {
+				lo = j;
+			}
+		}
+		v2 swap = verts[i];
+		verts[i] = verts[lo];
+		verts[lo] = swap;
+	}
+
+	int j = 2;
+	int hull[POLYGON_MAX_VERTS + 1];
+	hull[0] = 0;
+	hull[1] = 1;
+
+	// Find lower-half of hull.
+	for (int i = 2; i < count; ++i) {
+		while (j >= 2) {
+			v2 e0 = verts[hull[j-1]] - verts[hull[j-2]];
+			v2 e1 = verts[i] - verts[hull[j-2]];
+			if (det2(e0, e1) <= 0) --j;
+			else break;
+		}
+		hull[j++] = i;
+	}
+
+	// Find top-half of hull.
+	for (int i = count-2, k = j+1; i >= 0; --i) {
+		while (j >= k) {
+			v2 e0 = verts[hull[j-1]] - verts[hull[j-2]];
+			v2 e1 = verts[i] - verts[hull[j-2]];
+			if (det2(e0, e1) <= 0) --j;
+			else break;
+		}
+		hull[j++] = i;
+	}
+
+	--j; // Pop the last vert off as it's a duplicate.
+	if (j < 3) return 0;
+	v2 hull_verts[POLYGON_MAX_VERTS];
+	for (int i = 0; i < j; ++i) hull_verts[i] = verts[hull[i]];
+	memcpy(verts, hull_verts, sizeof(v2) * j);
+	return j;
+}
+{% endhighlight %}
+
+### Circle to Circle
+
+### AABB to AABB
+
+### Advanced Collision Detection
+
+More advanced collision detection routines are out of scope for this article. Things like Capsule and Polygon collisions require quite lot of complicated mathematics and code. That's all for another time and another blog post! For now you can find a full implementation of correctly implemented and efficient 2D collisions routines at [cute_c2.h](https://github.com/RandyGaul/cute_framework/blob/master/libraries/cute/cute_c2.h), a small single-file C library. It covers circles, capsules, polygons, aabbs, rays, convex hull, shape expansion, closest point pairs, and time of impact (swept) collision detection.
 
 ## Toy Demo
+
+## Numeric and Geometric Robustness
+
+## Random Numbers
+
+## Pointer Aliasing
 
 THIS POST IS A WIP
