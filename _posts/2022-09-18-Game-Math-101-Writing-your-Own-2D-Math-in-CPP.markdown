@@ -1854,7 +1854,7 @@ A^-1 = A^T = B
 Here are some notable properties of rotation matrices:
 
 1. Multiplication is non-commutative. That means A * B != B * A. If you switch around the order of operations *you will get a different effect*. This goes back to our old rule, listed next as number 2.
-2. Rotations are always performed about the origin. Period. It's possible to encode a larger dimensioned matrix than a mere 2x2 matrix that concatenate many rotations, translations and scales together - but each individual rotation encoded within will still have been perform about the origin. Even if the transform encodes first a translation, then a rotation, then an inverse translation (rotating about a point), the rotation itself was still done about the origin at the (despite it being temporarily shifted).
+2. Rotations are always performed about the origin. Period. It's possible to encode a larger dimensioned matrix than a mere 2x2 matrix that concatenate many rotations, translations and scales together - but each individual rotation encoded within will still have been performed about the origin. Even if the transform encodes first a translation, then a rotation, then an inverse translation (rotating about a point), the rotation itself was still done about the origin (despite it being temporarily shifted).
 3. The inverse of a rotation matrix is the transposition of the rotation matrix.
 
 Going back to m2 struct we can retrive the x-axis or y-axis of a rotation matrix any time by simply getting the x column or y column.
@@ -1921,9 +1921,9 @@ struct m3x2
 
 Translations don't require too much explanation here -- you're already familiar with them! The key thing to note here is order of operations. When representing a full m3x2 matrix you can encode translations, rotations and scales all together. However, when mixing these operations you lose commutativity. Here comes another nice rule to sear into brain. Ssss...
 
-* To undo a series of transform operations, you must not only invert each operation, but also *reverse the order of operations*. Example: (A * B * C)-1 = C^-1 * B^-1 * C^-1
+* To undo a series of transform operations, you must not only invert each operation, but also *reverse the order of operations*. Example: (A * B * C)^-1 = C^-1 * B^-1 * A^-1
 
-And finally, a function to build a transformation matrix.
+And finally, a function to build a translation matrix.
 
 {% highlight cpp %}
 m3x2 make_translation(v2 p)
@@ -1939,7 +1939,7 @@ m3x2 make_translation(v2 p)
 
 With the nice m3x2 struct we defined in the previous section we can represent almost any kind of 2D transformation we might need, especially when we're thinking about the three most common ones: scaling, rotating and translating.
 
-First up, let's list down a series of `make_*` functions for building our m3x2 transormation matrices, including `make_translation` from the previous section.
+First up, let's list down a series of `make_*` functions for building our m3x2 transformation matrices, including `make_translation` from the previous section.
 
 {% highlight cpp %}
 m3x2 make_identity() { m3x2 m; m.m = m2_identity; m.p = v2(0, 0); return m; }
@@ -1955,6 +1955,7 @@ m3x2 make_TSR(v2 p, v2 s, float radians)
 	m.x = v2(r.c, -r.s) * s.x;
 	m.y = v2(r.s, r.c) * s.y;
 	m.p = p;
+	return m;
 }
 {% endhighlight %}
 
