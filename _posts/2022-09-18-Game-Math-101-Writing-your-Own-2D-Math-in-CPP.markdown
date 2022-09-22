@@ -33,9 +33,9 @@ gif here
 * Transforms
 * Raycasting Basics
 * Collision Detection Basics
+* Numeric and Geometric Robustness
+* Random Numbers
 * Toy Demo
-
-## Prerequisites
 
 You'll need to know some basic C++ (well, more like just some basic C stuff), but not much so don't be worried. If you're not quite comfortable feel free to visit some online C++ tutorials and then come back here later to try again. At a minimum I'd recommend learning about these topics:
 
@@ -134,7 +134,7 @@ else
 	endif
 endif
 
-demo : demo.cpp ../../tigr.c
+demo : demo.cpp tigr.c
 	g++ $^ -Os -o $@ $(CFLAGS) $(LDFLAGS)
 {% endhighlight %}
 
@@ -186,7 +186,7 @@ It should look like this:
 
 ## Positions (points) and Vectors
 
-You've already used them in the last section on drawing lines! A vector is just a collection of numbers, each called a component. For games it's very common to use 2D, 3D, and occassionally 4D vectors. For this article let's just stick with 2D vectors. Usually we use vectors to represent positions, velocities, and directions. For each of these vectors there would be an x and y a component.
+You've already used them in the last section on drawing lines! A vector is just a collection of numbers, each number called a component. For games it's very common to use 2D, 3D, and occassionally 4D vectors. For this article let's just stick with 2D vectors. Usually we use vectors to represent positions, velocities, and directions. For each of these vectors there would be an x and y a component.
 
 We can write a vector like `{x, y}`, or `(x, y)`, or even just `v`. In our program we can use a struct to represent a vector as a pair of two floats.
 
@@ -442,13 +442,19 @@ float height(aabb box) { return box.max.y - box.min.y; }
 v2 center(aabb box) { return (box.min + box.max) * 0.5f; }
 {% endhighlight %}
 
-However, for that last function to work properly we must expand our vector operations. It's possible to multiply a vector with a scalar. A scalar means a single component number, or a float. Simply multiply with the x component, and then the y component. This adjusts the size, or scale of a vector.
+However, for that last function to work properly we must expand our vector operations. It's possible to multiply a vector with a scalar. A scalar means a single component number, or a float. Simply multiply with the x component, and then the y component. This adjusts the size, or scale of a vector (also known as magnitude).
 
 {% highlight cpp %}
 v2 operator*(v2 a, float b) { return v2(a.x * b, a.y * b); }
 {% endhighlight %}
 
-In math notation the length of a vector v is `|v|`. When we multiply a vector v, we are multiplying each component, which in turn scales the length by the same value. We can calculate the length of a vector by utilizing the Pythagorean Theorem `a^2 + b^c = c^2`, where a, b and c are sides of a right triangle.
+In math notation the length of a vector v is `|v|`.
+
+* Magnitude is the same as length of a vector v `|v|`
+* Scale is the same as length of a vector v `|v|`
+* These terms are all synonymous
+
+When we multiply a vector v, we are multiplying each component, which in turn scales the length by the same value. We can calculate the length of a vector by utilizing the Pythagorean Theorem `a^2 + b^c = c^2`, where a, b and c are sides of a right triangle.
 
 ![pythagorean](/assets/pythagorean.png)
 
@@ -566,7 +572,7 @@ int main()
 
 ![draw_box](/assets/draw_box.png)
 
-And finally let's animate this box a bit. It's time to introduce time... Haha. I'm practicing my dad jokes. `tigrTime` is a nice function that returns the number of seconds since it was last called as a float. We can use it to calculate a `dt` variable once per game loop, standing for `delta time`. This will be used a whole lot later in this article for animating things and calculating movements.
+And finally let's animate this box a bit. It's time to introduce, time... Haha. I'm practicing my dad jokes. `tigrTime` is a nice function that returns the number of seconds since it was last called as a float. We can use it to calculate a `dt` variable once per game loop, standing for `delta time`. This will be used a whole lot later in this article for animating things and calculating movements.
 
 For now we can use time and pass it into cosine and sine functions `cosf` and `sinf` from the `math.h` C runtime header. Go ahead and check out these edits to our program. I added `// New code!` comments on all the edited lines since the last version.
 
@@ -647,11 +653,11 @@ int main()
 
 ![morphing_box](/assets/morphing_box.gif)
 
-## Transforming the Screen Space
+## Transforming to Screen Space
 
 When we're talking about games and math the word transform means to go from one coordinate space to another. You're likely already familiar with the [traditional 2D cartesian space](https://en.wikipedia.org/wiki/Cartesian_coordinate_system), whether or not you're familiar with the terminology. There are two axes, one for x and one for y. However, it's possible to take that 2D space and transform it to another space.
 
-The ways of transformation we will get into later include:
+The types of transformation we will cover later include:
 
 * Translation
 * Scaling (also includes flipping/mirroring)
@@ -817,17 +823,17 @@ When run it will show a red box traveling along our new x-axis starting at the o
 
 From here on when we write new math code you can follow along and place it into the `math_101.h` header! Drawing related functions can go into `draw.h`. The red box is traveling at 30 pixels per second. We can see this from the expression `v2(30.0f, 0) * dt`. Whenever we multiply something by dt, it can be read like "over one second". In this case it's 30 pixels per second.
 
-> NOTE: Those more familiar with C might notice no include guards were used. Don't worry about this for now, we'll cover it later. For now it's more important to just focus on the math and pump out more code. Our program is just one-file conceptually, and we're only splitting it up into different files to make following this article easier.
+> NOTE: Those more familiar with C might notice no include guards were used. Don't worry about this for now; it's more important to just focus on the math and pump out more code. Our program is just one-file conceptually, and we're only splitting it up into different files to make following this article easier. TODO - Link to GitHub repo of final demo.
 
 ## Rotations
 
 Rotations are actually much more easy to perform than they are to learn about. Here comes another one of those rules to burn into your mind: *rotations are always done about the origin*. This is the truth. Here is how we rotate a vector or point about the origin given an angle in [radians](https://mathworld.wolfram.com/Radian.html#:~:text=The%20radian%20is%20a%20unit,or%2057.).
 
 {% highlight cpp %}
-v2 rotate(v2 v, float a)
+v2 rotate(v2 v, float radians)
 {
-	float s = sinf(a);
-	float c = cosf(a);
+	float s = sinf(radians);
+	float c = cosf(radians);
 	return v2(c * v.x - s * v.y, s * v.x + c * v.y);
 }
 {% endhighlight %}
@@ -845,7 +851,7 @@ v2 vector_on_unit_circle_from_angle(float radians)
 }
 {% endhighlight %}
 
-We can think of this as rotating the x-axis (1, 0) by an angle `a` (remember, when writing code `cosf` and `sinf` functions work in radians mode). Similarly, we can think about how to rotate the y-axis by the same angle `a`, and we would get a similar result of (-sin(a), cos(a)). One way to realize this is from a useful function called `skew`.
+We can think of this as rotating the x-axis (1, 0) by an angle (remember, when writing code `cosf` and `sinf` functions work in radians mode). Similarly, we can think about how to rotate the y-axis by the same angle, and we would get a similar result of (-sin(radians), cos(radians)). One way to realize this is from a useful function called `skew`.
 
 {% highlight cpp %}
 v2 skew(v2 a) { return v2(-a.y, a.x); }
@@ -853,7 +859,7 @@ v2 skew(v2 a) { return v2(-a.y, a.x); }
 
 ![skew_2d.png](/assets/skew_2d.png)
 
-It returns vector `a` rotated by 90 degrees counter-clockwise. To rotate a vector 90 degrees counter-clockwise we flip the x and y components, and negate the x final component. It comes from the concept of a skew-symmetric matrix, one that can [perform a cross-product](https://en.wikipedia.org/wiki/Skew-symmetric_matrix#Cross_product). We won't really go over this, I'm just mentioning it for anyone curious what the name means.
+It returns vector rotated by 90 degrees counter-clockwise. To rotate a vector 90 degrees counter-clockwise we flip the x and y components, and negate the x final component. It comes from the concept of a skew-symmetric matrix, one that can [perform a cross-product](https://en.wikipedia.org/wiki/Skew-symmetric_matrix#Cross_product). We won't really go over this, I'm just mentioning it for anyone curious what the name means.
 
 As it turns out, whenever we write down any vector, a such as (1, 2) or (10, -13) we are using what's called a [basis](https://en.wikipedia.org/wiki/Basis_(linear_algebra)), or a [space](https://findnerd.com/list/view/Computer-Graphics-Different-Spaces/6982/). Our vectors are not merely (1, 2) or (10, -13), they are actually expressed as multipliers of the x and y axes.
 
@@ -877,7 +883,7 @@ Seems pretty silly, right? All that extra work for nothing! Well, when we think 
 
 ![basis_rotation.png](/assets/basis_rotation.png)
 
-Let's use the terms i and j for representing a number relative to a basis. Taking our example vector of (10, -13) we can write it down as it would be shown in left-hand diagram as 10 * i + -13 * j. So what would i and j be for the rotated basis (x', 0) + (0, y') by and angle `a`? From our understanding of the unit circle the x-axis would be (cos(a), sin(a)). We can use this for our i vector. To get the j vector we rotate the x-axis by 90 degrees counter-clockwise using our skew function and get (-sin(a), cos(a)). To represent (10, -13) relative to our new i and j vectors we just use the formula from earlier.
+Let's use the terms i and j for representing a number relative to a basis. Taking our example vector of (10, -13) we can write it down as it would be shown in left-hand diagram as 10 * i + -13 * j. So what would i and j be for the rotated basis (x', 0) + (0, y') by an angle `a`? From our understanding of the unit circle the x-axis would be (cos(a), sin(a)). We can use this for our i vector. To get the j vector we rotate the x-axis by 90 degrees counter-clockwise using our skew function and get (-sin(a), cos(a)). To represent (10, -13) relative to our new i and j vectors we just use the formula from earlier.
 
 ```
 10 * i + -13 * j
@@ -1300,7 +1306,7 @@ Finally there's a parametric form which uses a single point on the line, and a v
 p' = p + n * t
 ```
 
-Where p' is any point on the plane, p is a given point on the plane, and t is a parameter to pick a unique point on the plane. My favorite format is the plane equation ax + by - c = 0, or ax + by = c. We can make a plane type in our code, though I'd recommend calling it halfspace. Reason being: plane is often used as an identifier in other areas of the code, so we probably can avoid clashes by calling it a halfspace instead.
+Where p' is any point on the plane, p is a given point on the plane, and t is a parameter to pick a unique point on the plane. My favorite format is the plane equation ax + by - c = 0, or ax + by = c. We can make a plane type in our code, though I'd recommend calling it halfspace. Reason being: plane is often used as an identifier in other areas of the code, so we probably can avoid naming clashes by calling it a halfspace instead.
 
 {% highlight cpp %}
 struct halfspace
@@ -1321,7 +1327,7 @@ Here are some extremely useful operations you can do with planes.
 
 ### Distance Point to Plane
 
-First up is to compute the distance of a point to a plane. Let us assume the n vector of the plane is normalized. Simply plug the point into the plane equation.
+First up is to compute the distance of a point to a plane. Let us assume the n vector (the normal vector orthogonal to the plane's surface, telling us which way the plane is facing) of the plane is normalized. Simply plug the point into the plane equation.
 
 ```
 distance of point p to a halfspace (plane)
@@ -2299,7 +2305,7 @@ int main()
 }
 {% endhighlight %}
 
-## Ray to Polygon
+### Ray to Polygon
 
 We've actually covered this topic already back in the **Distance and Planes** section, at least, mostly covered it by calculating distances of points to planes, and intersection of line segment to plane. From Christer Ericson's excellent book Real-Time Collision Detection he explains a great algorithm for raycasting against a polygon.
 
@@ -2440,12 +2446,12 @@ int convex_hull(v2* verts, int count)
 
 More advanced collision detection routines are out of scope for this article. Things like Capsule and Polygon collisions require quite lot of complicated mathematics and code. That's all for another time and another blog post! For now you can find a full implementation of correctly implemented and efficient 2D collisions routines at [cute_c2.h](https://github.com/RandyGaul/cute_framework/blob/master/libraries/cute/cute_c2.h), a small single-file C library. It covers circles, capsules, polygons, aabbs, rays, convex hull, shape expansion, closest point pairs, and time of impact (swept) collision detection.
 
-## Toy Demo
-
 ## Numeric and Geometric Robustness
 
 ## Random Numbers
 
 ## Pointer Aliasing
+
+## Toy Demo
 
 THIS POST IS A WIP
