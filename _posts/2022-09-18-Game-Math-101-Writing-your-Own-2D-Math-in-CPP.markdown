@@ -863,7 +863,7 @@ v2 skew(v2 a) { return v2(-a.y, a.x); }
 
 ![skew_2d.png](/assets/skew_2d.png)
 
-It returns vector rotated by 90 degrees counter-clockwise. To rotate a vector 90 degrees counter-clockwise we flip the x and y components, and negate the x final component. It comes from the concept of a skew-symmetric matrix, one that can [perform a cross-product](https://en.wikipedia.org/wiki/Skew-symmetric_matrix#Cross_product). We won't really go over this, I'm just mentioning it for anyone curious what the name means.
+It returns vector rotated by 90 degrees counter-clockwise. To rotate a vector 90 degrees counter-clockwise we flip the x and y components, and negate the x final component. It comes from the concept of a skew-symmetric matrix, one that can [perform a cross-product](https://en.wikipedia.org/wiki/Skew-symmetric_matrix#Cross_product). Other names include pseudo-cross product, or perp-dot product (standing for perpendicular). We won't really go over these, I'm just mentioning them for anyone curious what the names mean.
 
 As it turns out, whenever we write down any vector, a such as (1, 2) or (10, -13) we are using what's called a [basis](https://en.wikipedia.org/wiki/Basis_(linear_algebra)), or a [space](https://findnerd.com/list/view/Computer-Graphics-Different-Spaces/6982/). Our vectors are not merely (1, 2) or (10, -13), they are actually expressed as multipliers of the x and y axes.
 
@@ -1725,7 +1725,7 @@ m = [ux, vx]
     [uy, vy]
 ```
 
-Each column of m is a vector u or v. If this matrix is a rotation matrix, then u and v would be the basis vectors. u is the x-axis and v is the y-axis. When u and v are unit vectors, *and orthogonal* (at 90 degree angles from each other), we call m a rotation matrix. We've actually already been using rotation matrices without knowing, back in the rotation section of this article. Let's define our matrix struct type and a function to build a rotation matrix.
+Each column of m is a vector u or v. If this matrix is a rotation matrix, then u and v would be the basis vectors. u is the x-axis and v is the y-axis. When u and v are unit vectors, *and orthogonal* (at 90 degree angles from each other), we call m a rotation matrix (or an *orthonormal basis*). We've actually already been using rotation matrices without knowing, back in the rotation section of this article. Let's define our matrix struct type and a function to build a rotation matrix.
 
 {% highlight cpp %}
 struct m2
@@ -2318,7 +2318,7 @@ Ericson describes the process as continually slicing a line segment with cutting
 
 ![line_clip_poly.png](/assets/line_clip_poly.png)
 
-The code is rather straightforward. Compute the numerator and denominator in our earlier discussions of line segment to plane, avoid divide by zero issues, and keep track of a lo/hi time of intersection. Just be sure that the polygon is in counter-clockwise vertex order, and is a valid [convex hull](https://en.wikipedia.org/wiki/Convex_hull). We'll go over an algorithm for building 2D convex hulls later.
+The code is rather straightforward. Compute the numerator and denominator in our earlier discussions of line segment to plane, avoid divide by zero issues, and keep track of a lo/hi time of intersection. Just be sure that the polygon is in counter-clockwise vertex order, and is a valid [convex hull](https://en.wikipedia.org/wiki/Convex_hull). We'll go over an algorithm for building 2D convex hulls later. Note we can of course use this algorithm on aabb's as well (though it wouldn't quite be optimal, will definitely get the job done).
 
 {% highlight cpp %}
 #define POLYGON_MAX_VERTS 8
@@ -2377,14 +2377,128 @@ bool raycast(ray r, polygon poly, raycast_output* out)
 }
 {% endhighlight %}
 
+You might be wondering why the polygon is limited to merely 8 vertices with `POLYGON_MAX_VERTS`. It's possible to change this to some other value, such as 16 or 32, but in practice it's often not a very useful thing to do. In 2D if there are too many vertices the shape starts to look a lot less unique, more like a circle or ellipse. It's very convenient to keep implementations extremely simple by limiting the number of vertices to a small number. This makes polygons `memcpy`-able, and very cache-friendly for running quick and efficient code.
+
 ## Collision Detection Basics
+
+Detecting collisions between shapes is quite a difficult challenge. It takes a lot of diligence to learn all the mathematics covered in this article up to this point. We will cover a couple select algorithms to get you started, but a full discussion of collision algorithms is a bit out of scope. Some additional resources are linked at the end of this section.
 
 ### Implicit Shapes
 
-### Convex Hull
+Implicitly defined shapes are ones we can represent with a small bit of information, as opposed to storing a mesh or array of vertices. Good candidates in 2D include circles, capsules, rays, and axis aligned boxes (aabb). Here's my recommendation on how to setup your implicit shapes to make writing collision detection routines as easy as possible. Note these definitions were all provided earlier in this document (they're the same as before).
 
 {% highlight cpp %}
-// Based on Andrew's Algorithm from Ericson's Real-Time Collision Detection book.
+struct circle
+{
+	circle() { }
+	circle(v2 p, float r) { this->p = p; this->r = r; }
+	circle(float x, float y, float r) { this->p = v2(x, y); this->r = r; }
+	v2 p;
+	float r;
+};
+{% endhighlight %}
+
+{% highlight cpp %}
+#define POLYGON_MAX_VERTS 8
+
+struct polygon
+{
+	int count = 0;
+	v2 verts[POLYGON_MAX_VERTS];
+	v2 norms[POLYGON_MAX_VERTS];
+	void compute_norms()
+	{
+		for (int i = 0; i < count; ++i) {
+			int j = i + 1 < count ? i + 1 : 0;
+			norms[i] = norm(skew(verts[i] - verts[j]));
+		}
+	}
+};
+{% endhighlight %}
+
+{% highlight cpp %}
+struct aabb
+{
+	aabb() { }
+	aabb(v2 min, v2 max) { this->min = min; this->max = max; }
+	v2 min;
+	v2 max;
+};
+{% endhighlight %}
+
+{% highlight cpp %}
+struct raycast_output
+{
+	float t; // Time of impact.
+	v2 n;    // Normal of the surface at impact (unit length).
+};
+
+struct ray
+{
+	ray() { }
+	ray(v2 p, v2 d, float t) { this->p = p; this->d = d; this->t = t; }
+	v2 p;    // Start position.
+	v2 d;    // Direction of the ray (normalized)
+	float t; // Distance along d the ray travels.
+	v2 endpoint() { return p + d * t; }
+	v2 impact(raycast_output hit_data) { return p + d * hit_data.t; }
+};
+{% endhighlight %}
+
+### Circle to Circle
+
+### AABB to AABB
+
+### Convex Hull
+
+Computing the [convex hull](https://en.wikipedia.org/wiki/Convex_hull) from a set of points is a critical operation for collision detection. In 2D usually hulls are defined by a set of counter-clockwise vertices. The convexity of a convex hull allows us to perform a variety of very useful collision detection tests without too much trouble.
+
+This mainly comes from the planes of the convex hull. Each plane of a convex hull corresponds to one of the faces. If we visualize the negative space behind a plane as the half of all space pointing away from the plane's normal vector, we notice for a convex hull the interior is te negative space. Another way to rephrase this: inside the convex hull is behind all of the face planes.
+
+#### Point in Polygon (Convex)
+
+A similar observation pops up for the outside of a convex hull -- outside of a convex hull is on the positive space of *at least one* of the planes. This lets us write down a very simple and efficient routine to detect point in convex polygon.
+
+{% highlight cpp %}
+bool point_in_poly(polygon poly, v2 p)
+{
+	for (int i = 0; i < poly.count; ++i) {
+		float c = dot(poly.norms[i], poly.verts[i]);
+		float dist = dot(poly.norms[i], p) - c;
+		if (dist >= 0) return false;
+	}
+	return true;
+}
+{% endhighlight %}
+
+#### Other Convex Hull Tests
+
+Here are some other particularly interesting tests you can consider learning about outside of this article. This article is already too long, so I can't cram in all these details in one place!
+
+* Point in concave polygon (ray odd/even hit test), Ericson Real-Time Collision Detection
+* [Polygon to Polygon via SAT](https://www.gdcvault.com/play/1017646/Physics-for-Game-Programmers-The) (separating axis theorem/test)
+* [Broadphase, or Bounding Volume Heirarchy](https://box2d.org/files/ErinCatto_DynamicBVH_Full.pdf) (BVH) (especially the dynamic aabb tree by E. Catto)
+* (Sutherland-Hodgman clipping algorithm)[https://gist.github.com/RandyGaul/8b9c3f3724ea34959586205220be1da3] for [Dynamic Shape Slicing](https://gamedevelopment.tutsplus.com/tutorials/how-to-dynamically-slice-a-convex-shape--gamedev-14479)
+
+#### Computing a Convex Hull
+
+From reading Christer Ericson's orange book Real-Time Collision Detection we can implement the simplest algorithm I know of for computing a 2D convex hull, Andrew's algorithm. The only predicate used is the `det2` function to figure out if a set of vertices are on counter-clockwise or clockwise order. The main step of the algorithm looks at three points and forms two vectors each starting from one point, and pointing to the other two points. This is exactly like our section on the `shortest_arc` function using the `det2` function. Here is the algorithm:
+
+1. First sort all the input points from smallest to largest on the x-axis. To break ties, sort from smallest to largest on the y-axis.
+2. Add the two left-most vertices to the hull. The first *will be on the convex hull*, while the second is tentative.
+3. Check the next vertex, going from left to right, and see if it's on the left (counter-clockwise negative) or right (clockwise positive) using `det2`.
+4. If the vertex is more left than our tentative vertex, pop the tentative vertex off the hull and and replace it with the next vertex.
+5. Continue steps 3-4 until we reach a tentative vertex that creates a clockwise orientation, or run out of points to pop.
+6. Complete once we loop over all the points. We have added the top-half or bottom-half of the hull (depending on how you compute the inputs to `det2`, in our example below this was the bottom-half).
+7. Repeat the process for the other half of the hull.
+8. Remove the extra point at the end of the hull output.
+
+Check out this animation of the algorithm from [wikibooks on Andrew's Algorithm](https://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain).
+
+![andrew_monotone](/assets/andrew_monotone.gif)
+
+{% highlight cpp %}
+// Andrew's Algorithm from Ericson's Real-Time Collision Detection book.
 int convex_hull(v2* verts, int count)
 {
 	count = min(count, POLYGON_MAX_VERTS);
@@ -2443,13 +2557,11 @@ int convex_hull(v2* verts, int count)
 }
 {% endhighlight %}
 
-### Circle to Circle
-
-### AABB to AABB
-
 ### Advanced Collision Detection
 
 More advanced collision detection routines are out of scope for this article. Things like Capsule and Polygon collisions require quite lot of complicated mathematics and code. That's all for another time and another blog post! For now you can find a full implementation of correctly implemented and efficient 2D collisions routines at [cute_c2.h](https://github.com/RandyGaul/cute_framework/blob/master/libraries/cute/cute_c2.h), a small single-file C library. It covers circles, capsules, polygons, aabbs, rays, convex hull, shape expansion, closest point pairs, and time of impact (swept) collision detection.
+
+For more further readings I highly suggest Dirk Gregorius's GDC talks on the Separating Axis Thereom. Another good resource is Christer Ericson's orange book Real-Time Collision Detection, although it often does not cover the mathematics for generating contact manifold information, is of top quality when it comes to learning 3D mathematics and how to understand the geometry involved in collision detection.
 
 ## Numeric and Geometric Robustness
 
