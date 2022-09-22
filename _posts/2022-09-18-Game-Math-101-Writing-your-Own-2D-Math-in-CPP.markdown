@@ -33,9 +33,9 @@ gif here
 * Transforms
 * Raycasting Basics
 * Collision Detection Basics
+* Numeric and Geometric Robustness
+* Random Numbers
 * Toy Demo
-
-## Prerequisites
 
 You'll need to know some basic C++ (well, more like just some basic C stuff), but not much so don't be worried. If you're not quite comfortable feel free to visit some online C++ tutorials and then come back here later to try again. At a minimum I'd recommend learning about these topics:
 
@@ -134,7 +134,7 @@ else
 	endif
 endif
 
-demo : demo.cpp ../../tigr.c
+demo : demo.cpp tigr.c
 	g++ $^ -Os -o $@ $(CFLAGS) $(LDFLAGS)
 {% endhighlight %}
 
@@ -2299,7 +2299,7 @@ int main()
 }
 {% endhighlight %}
 
-## Ray to Polygon
+### Ray to Polygon
 
 We've actually covered this topic already back in the **Distance and Planes** section, at least, mostly covered it by calculating distances of points to planes, and intersection of line segment to plane. From Christer Ericson's excellent book Real-Time Collision Detection he explains a great algorithm for raycasting against a polygon.
 
@@ -2440,12 +2440,12 @@ int convex_hull(v2* verts, int count)
 
 More advanced collision detection routines are out of scope for this article. Things like Capsule and Polygon collisions require quite lot of complicated mathematics and code. That's all for another time and another blog post! For now you can find a full implementation of correctly implemented and efficient 2D collisions routines at [cute_c2.h](https://github.com/RandyGaul/cute_framework/blob/master/libraries/cute/cute_c2.h), a small single-file C library. It covers circles, capsules, polygons, aabbs, rays, convex hull, shape expansion, closest point pairs, and time of impact (swept) collision detection.
 
-## Toy Demo
-
 ## Numeric and Geometric Robustness
 
 ## Random Numbers
 
 ## Pointer Aliasing
+
+## Toy Demo
 
 THIS POST IS A WIP
