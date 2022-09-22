@@ -2299,8 +2299,153 @@ int main()
 }
 {% endhighlight %}
 
+## Ray to Polygon
+
+We've actually covered this topic already back in the **Distance and Planes** section, at least, mostly covered it by calculating distances of points to planes, and intersection of line segment to plane. From Christer Ericson's excellent book Real-Time Collision Detection he explains a great algorithm for raycasting against a polygon.
+
+Ericson describes the process as continually slicing a line segment with cutting planes, where each plane is a face of the polygon. If the ray is completely sliced away (length becomes 0 or negative) there is no intersection. Otherwise the final line segment contains the start/endpoints for the ray intersections. Special care must be taken to avoid dividing by zero. The image below shows the step-by-step process of clipping a ling segment against invidual planes of a polygon.
+
+![line_clip_poly.png](/assets/line_clip_poly.png)
+
+The code is rather straightforward. Compute the numerator and denominator in our earlier discussions of line segment to plane, avoid divide by zero issues, and keep track of a lo/hi time of intersection. Just be sure that the polygon is in counter-clockwise vertex order, and is a valid [convex hull](https://en.wikipedia.org/wiki/Convex_hull). We'll go over an algorithm for building 2D convex hulls later.
+
+{% highlight cpp %}
+#define POLYGON_MAX_VERTS 8
+
+struct polygon
+{
+	int count = 0;
+	v2 verts[POLYGON_MAX_VERTS];
+	v2 norms[POLYGON_MAX_VERTS];
+	void compute_norms()
+	{
+		for (int i = 0; i < count; ++i) {
+			int j = i + 1 < count ? i + 1 : 0;
+			norms[i] = norm(skew(verts[i] - verts[j]));
+		}
+	}
+};
+
+bool raycast(ray r, polygon poly, raycast_output* out)
+{
+	float lo = 0;
+	float hi = r.t;
+	int index = ~0;
+
+	for (int i = 0; i < poly.count; ++i) {
+		// Calculate distance of point to plane.
+		// This is a slight variation of dot(n, p) - c, where instead of pre-computing c as scalar,
+		// we form a vector pointing from the ray's start point to a point on the plane. This is
+		// functionally equivalent to dot(n, p) - c, but we don't have to store c inside of our poly.
+		float distance = dot(poly.norms[i], poly.verts[i] - r.p);
+		float denominator = dot(poly.norms[i], r.d);
+		if (denominator == 0) {
+			// Ray direction is parallel to this poly's face plane.
+			// If the ray's start direction is outside the plane we know there's no intersection.
+			if (distance > 0) return false;
+		} else {
+			float t = distance / denominator;
+			if (denominator < 0) {
+				// Ray is entering the plane.
+				lo = max(lo, t);
+				index = i;
+			}
+			else hi = min(hi, t); // Ray is exiting the plane.
+			bool ray_clipped_away = lo > hi;
+			if (ray_clipped_away) return false;
+		}
+	}
+
+	if (index != ~0) {
+		out->t = lo;
+		out->n = poly.norms[index];
+		return true;
+	} else {
+		return false;
+	}
+}
+{% endhighlight %}
+
 ## Collision Detection Basics
 
+### Implicit Shapes
+
+### Convex Hull
+
+{% highlight cpp %}
+// Based on Andrew's Algorithm from Ericson's Real-Time Collision Detection book.
+int convex_hull(v2* verts, int count)
+{
+	count = min(count, POLYGON_MAX_VERTS);
+	if (count < 3) {
+		return 0;
+	}
+
+	// Sort lexicographically (on x-axis, then y-axis).
+	for (int i = 0; i < count; ++i) {
+		int lo = i;
+		for (int j = i+1; j < count; ++j) {
+			if (verts[j].x < verts[lo].x) {
+				lo = j;
+			} else if (verts[j].x == verts[lo].x && verts[j].y < verts[lo].y) {
+				lo = j;
+			}
+		}
+		v2 swap = verts[i];
+		verts[i] = verts[lo];
+		verts[lo] = swap;
+	}
+
+	int j = 2;
+	int hull[POLYGON_MAX_VERTS + 1];
+	hull[0] = 0;
+	hull[1] = 1;
+
+	// Find lower-half of hull.
+	for (int i = 2; i < count; ++i) {
+		while (j >= 2) {
+			v2 e0 = verts[hull[j-1]] - verts[hull[j-2]];
+			v2 e1 = verts[i] - verts[hull[j-2]];
+			if (det2(e0, e1) <= 0) --j;
+			else break;
+		}
+		hull[j++] = i;
+	}
+
+	// Find top-half of hull.
+	for (int i = count-2, k = j+1; i >= 0; --i) {
+		while (j >= k) {
+			v2 e0 = verts[hull[j-1]] - verts[hull[j-2]];
+			v2 e1 = verts[i] - verts[hull[j-2]];
+			if (det2(e0, e1) <= 0) --j;
+			else break;
+		}
+		hull[j++] = i;
+	}
+
+	--j; // Pop the last vert off as it's a duplicate.
+	if (j < 3) return 0;
+	v2 hull_verts[POLYGON_MAX_VERTS];
+	for (int i = 0; i < j; ++i) hull_verts[i] = verts[hull[i]];
+	memcpy(verts, hull_verts, sizeof(v2) * j);
+	return j;
+}
+{% endhighlight %}
+
+### Circle to Circle
+
+### AABB to AABB
+
+### Advanced Collision Detection
+
+More advanced collision detection routines are out of scope for this article. Things like Capsule and Polygon collisions require quite lot of complicated mathematics and code. That's all for another time and another blog post! For now you can find a full implementation of correctly implemented and efficient 2D collisions routines at [cute_c2.h](https://github.com/RandyGaul/cute_framework/blob/master/libraries/cute/cute_c2.h), a small single-file C library. It covers circles, capsules, polygons, aabbs, rays, convex hull, shape expansion, closest point pairs, and time of impact (swept) collision detection.
+
 ## Toy Demo
+
+## Numeric and Geometric Robustness
+
+## Random Numbers
+
+## Pointer Aliasing
 
 THIS POST IS A WIP
