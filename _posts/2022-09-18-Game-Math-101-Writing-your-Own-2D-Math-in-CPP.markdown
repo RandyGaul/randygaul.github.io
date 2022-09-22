@@ -1359,7 +1359,7 @@ If the distance is positive then p is on the side of the plane the normal is fac
 Projecting a point onto a plane means moving the point to the plane's surface by moving it the shortest distance possible. The shortest distance is along the plane's normal vector. Therefore all we do is compute the distance to the plane, then move the point along the normal by that negated distance.
 
 {% highlight cpp %}
-v2 project(halfspace h, v2 p) { return p - distance(h, p); }
+v2 project(halfspace h, v2 p) { return p - h.n * distance(h, p); }
 {% endhighlight %}
 
 ### Intersection of a Line and a Plane
