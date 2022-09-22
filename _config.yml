@@ -29,7 +29,9 @@ twitter_username: randypgaul
 github_username:  randygaul
 
 # Build settings
-theme: minima
+remote_theme: jekyll/minima
+minima:
+  skin: auto
 plugins:
   - jekyll-feed
 
