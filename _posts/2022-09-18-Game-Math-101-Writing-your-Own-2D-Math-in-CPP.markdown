@@ -12,7 +12,9 @@ We will be using C++ and writing our own math to create some demonstrations and 
 
 gif here
 
-[source here](https://github.com/RandyGaul/game_math_101)
+[C source code here](https://github.com/RandyGaul/game_math_101)
+
+[This webpage's source](https://github.com/RandyGaul/randygaul.github.io) in case you want to post any edits/suggestions/discussion for the article.
 
 ## Table of Contents
 
