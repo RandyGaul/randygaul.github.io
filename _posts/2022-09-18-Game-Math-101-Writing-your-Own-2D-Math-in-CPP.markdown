@@ -12,6 +12,8 @@ We will be using C++ and writing our own math to create some demonstrations and 
 
 gif here
 
+[source here](https://github.com/RandyGaul/game_math_101)
+
 ## Table of Contents
 
 * Prerequisites
