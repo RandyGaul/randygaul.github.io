@@ -2484,9 +2484,19 @@ struct collision_data
 
 For more advanced collision routines a time of impact may also be calculated and represented as a single float `t` from 0 to 1.
 
-The reason `hit_points` is an array of up to two unique points is that the collision manifold exists within the contact plane. This means the plane orthogonal to the axis of minimum separation. The 2D cross-section of a convex polygon is merely a line segment, so two points suffices. In 3D however, more points are needed. Depending on the physics engine it could be anywhere from 3-8 points in practice, 4-5 being a golden spot. These hit points are mostly needed for phyics engines. If gameplay is the only customer then a single point of contact is likely all that's necessary, if any at all.
+The reason `points` is an array of up to two unique points is that the collision manifold exists within the contact plane. This means the plane orthogonal to the axis of minimum separation. The 2D cross-section of a convex polygon is merely a line segment, so two points suffices. In 3D however, more points are needed. Depending on the physics engine it could be anywhere from 3-8 points in practice, 4-5 being a golden spot. These hit points are mostly needed for phyics engines. If gameplay is the only customer then a single point of contact is likely all that's necessary, if any at all.
 
 We can augment our circle collision function to generate a manifold in the event a collision is detected. For now I will generate a single contact point for simplicity. By convention we can name each input shape `a` and `b` respectively, and always generate a `hit_spot` on the surface of `b`.
+
+{% highlight cpp %}
+struct collision_data
+{
+	bool hit = false;
+	v2 hit_spot;
+	float depth;
+	v2 normal;
+};
+{% endhighlight %}
 
 {% highlight cpp %}
 collision_data circle_to_circle(circle circ_a, circle circ_b)
