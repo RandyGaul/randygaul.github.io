@@ -18,26 +18,28 @@ gif here
 
 ## Table of Contents
 
-* Prerequisites
-* Get a Compiler
-* Grab a Copy of tigr
-* Build and Run the Math 101 Program
-* Drawing some Lines
-* Positions (points) and Vectors
-* Drawing some Points
-* Animating
-* Transforming the Screen Space
-* Rotations
-* Unit Vectors + Normalization
-* Dot Product
-* Cross Product (aka 2D Determinant)
-* Distance and Planes
-* Bezier Curves and Lerp
-* Matrices
-* Transforms
-* Raycasting Basics
-* Collision Detection Basics
-* Toy Demo
+* [Prerequisites](#prerequisites)
+* [Get a Compiler](#get-a-compiler)
+* [Grab a Copy of tigr](#grab-a-copy-of-tigr)
+* [Build and Run the Math 101 Program](#build-and-run-the-math-101-program)
+* [Drawing some Lines](#drawing-some-lines)
+* [Positions (points) and Vectors](#positions-points-and-vectors)
+* [Drawing some Points](#drawing-some-points)
+* [Animating](#animating)
+* [Transforming to Screen Space](#transforming-to-screen-space)
+* [Rotations](#rotations)
+* [Unit Vectors + Normalization](#unit-vectors--normalization)
+* [Dot Product](#dot-product)
+* [Cross Product (aka 2D Determinant)](#cross-product-aka-2d-determinant)
+* [Distance and Planes](#distance-and-planes)
+* [Bezier Curves and Lerp](#bezier-curves-and-lerp)
+* [Matrices](#matrices)
+* [Transforms](#transforms)
+* [Raycasting Basics](#raycasting-basics)
+* [Collision Detection Basics](#collision-detection-basics)
+* [Toy Demo](#toy-demo)
+
+## Prerequisites
 
 You'll need to know some basic C++ (well, more like just some basic C stuff), but not much so don't be worried. If you're not quite comfortable feel free to visit some online C++ tutorials and then come back here later to try again. At a minimum I'd recommend learning about these topics:
 
