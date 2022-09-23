@@ -2724,7 +2724,6 @@ Here are some other particularly interesting tests you can consider learning abo
 * Point in concave polygon (ray odd/even hit test), Ericson Real-Time Collision Detection
 * [Polygon to Polygon via SAT](https://www.gdcvault.com/play/1017646/Physics-for-Game-Programmers-The) (separating axis theorem/test)
 * [Broadphase, or Bounding Volume Heirarchy](https://box2d.org/files/ErinCatto_DynamicBVH_Full.pdf) (BVH) (especially the dynamic aabb tree by E. Catto)
-* [Sutherland-Hodgman clipping algorithm](https://gist.github.com/RandyGaul/8b9c3f3724ea34959586205220be1da3) for [Dynamic Shape Slicing](https://gamedevelopment.tutsplus.com/tutorials/how-to-dynamically-slice-a-convex-shape--gamedev-14479)
 * Time of impact (TOI), swept collision detection, or [continuous collision](https://box2d.org/files/ErinCatto_ContinuousCollision_GDC2013.pdf)
 
 #### Computing a Convex Hull
@@ -2801,6 +2800,63 @@ int convex_hull(v2* verts, int count)
 	for (int i = 0; i < j; ++i) hull_verts[i] = verts[hull[i]];
 	memcpy(verts, hull_verts, sizeof(v2) * j);
 	return j;
+}
+{% endhighlight %}
+
+#### Slicing a Convex Hull
+
+[Sutherland-Hodgman clipping algorithm](https://gist.github.com/RandyGaul/8b9c3f3724ea34959586205220be1da3) for [Dynamic Shape Slicing (an article I wrote some time ago)](https://gamedevelopment.tutsplus.com/tutorials/how-to-dynamically-slice-a-convex-shape--gamedev-14479) is a great way to make use of convex hulls. Rather than get into all the details I'll just recommend you check out my other article if you're interested! Here's the source code for the function to split a polygon `in` into `front` and `back` polygons along a splitting plane `split`.
+
+{% highlight cpp %}
+struct sutherland_hodgman_output
+{
+	polygon front;
+	polygon back;
+};
+
+bool in_front(float distance, float epsilon) { return distance > epsilon; }
+bool behind(float distance, float epsilon) { return distance < -epsilon; }
+bool on(float distance, float epsilon) { return !in_front(distance, epsilon) && !behind(distance, epsilon); }
+
+// See: https://gamedevelopment.tutsplus.com/tutorials/how-to-dynamically-slice-a-convex-shape--gamedev-14479
+sutherland_hodgman_output sutherland_hodgman(halfspace split, polygon in, const float k_epsilon = 1.e-4f)
+{
+	sutherland_hodgman_output out;
+	v2 a = in.verts[in.count - 1];
+	float da = distance(split, a);
+
+	for(int i = 0; i < in.count; ++i) {
+		v2 b = in.verts[i];
+		float db = distance(split, b);
+
+		if(in_front(db, k_epsilon)) {
+			if(behind(da, k_epsilon)) {
+				v2 i = intersect(b, a, db, da);
+				out.front.verts[out.front.count++] = i;
+				out.back.verts[out.back.count++] = i;
+			}
+			out.front.verts[out.front.count++] = b;
+		} else if(behind(db, k_epsilon)) {
+			if(in_front(da, k_epsilon)) {
+				v2 i = intersect(a, b, da, db);
+				out.front.verts[out.front.count++] = i;
+				out.back.verts[out.back.count++] = i;
+			} else if(on(da, k_epsilon)) {
+				out.back.verts[out.back.count++] = a;
+			}
+			out.back.verts[out.back.count++] = b;
+		} else {
+			out.front.verts[out.front.count++] = b;
+			if(on(da, k_epsilon)) {
+				out.back.verts[out.back.count++] = b;
+			}
+		}
+
+		a = b;
+		da = db;
+	}
+
+	return out;
 }
 {% endhighlight %}
 
