@@ -2318,7 +2318,7 @@ Ericson describes the process as continually slicing a line segment with cutting
 
 ![line_clip_poly.png](/assets/line_clip_poly.png)
 
-The code is rather straightforward. Compute the numerator and denominator in our earlier discussions of line segment to plane, avoid divide by zero issues, and keep track of a lo/hi time of intersection. Just be sure that the polygon is in counter-clockwise vertex order, and is a valid [convex hull](https://en.wikipedia.org/wiki/Convex_hull). We'll go over an algorithm for building 2D convex hulls later. Note we can of course use this algorithm on aabb's as well (though it wouldn't quite be optimal, will definitely get the job done).
+The code is rather straightforward. Compute the numerator and denominator in our earlier discussions of line segment to plane, avoid divide by zero issues, and keep track of a lo/hi time of intersection. Just be sure that the polygon is in counter-clockwise vertex order, and is a valid [convex hull](https://en.wikipedia.org/wiki/Convex_hull). We'll go over an algorithm for building 2D convex hulls later. Note we can of course use this algorithm on aabb's as well (though it wouldn't quite be optimal, will definitely get the job done and likely be more than fast enough for most games).
 
 {% highlight cpp %}
 #define POLYGON_MAX_VERTS 8
@@ -2447,7 +2447,245 @@ struct ray
 
 ### Circle to Circle
 
+Once we compute the distance between two circle centers, using the [Pythagorean Theorem](https://en.wikipedia.org/wiki/Pythagorean_theorem), we can compare it to the sum of the radii. If the radii are longer than the distance the circles interesect, otherwise they don't intersect.
+
+{% highlight cpp %}
+bool circle_to_circle(circle circ_a, circle circ_b)
+{
+	v2 d = circ_b.p - circ_a.p;
+	float d2 = dot(d, d);
+	float r = circ_a.r + circ_b.r;
+	return d2 < r * r;
+}
+{% endhighlight %}
+
+In order to resolve this collision a bit more information is needed such as the depth of the collision, and a vector to push the shapes away from each other. The best vector would be the axis of minimum penetration. It means the axis with the smallest signed distance to separate the shapes. You can find more information about this special axis by reading online about the Separating Axis Test.
+
+For the case of circles the axis is always going to be the normalized vector from one circle center to another, except when the circles are perfectly on top of each other, where we must choose an arbitrary axis to push along.
+
+#### Collision Manifold
+
+The information gathered from a collision routine on how shapes are touching is often called the collision [manifold](https://en.wikipedia.org/wiki/Manifold). It's a fancy word that means the topology (surface) of an enclosed shape (convex shapes in our case). Often times this manifold information will be used for one of two major purposes:
+
+1. Physics engines to resolve collisions semi-realistically.
+2. Gameplay logic to understand how things hit each other, like what the surface is like when a player walks upon it.
+
+The manifold should consist of penetration depth (how deeply shapes are intersecting), a collision normal (the axis of minimum penetration), and optionally points of contact along the collision plane. Here's an example struct definition:
+
+{% highlight cpp %}
+struct collision_data
+{
+	int count;
+	v2 points[2];
+	float depth[2];
+	v2 normal;
+};
+{% endhighlight %}
+
+For more advanced collision routines a time of impact may also be calculated and represented as a single float `t` from 0 to 1.
+
+The reason `hit_points` is an array of up to two unique points is that the collision manifold exists within the contact plane. This means the plane orthogonal to the axis of minimum separation. The 2D cross-section of a convex polygon is merely a line segment, so two points suffices. In 3D however, more points are needed. Depending on the physics engine it could be anywhere from 3-8 points in practice, 4-5 being a golden spot. These hit points are mostly needed for phyics engines. If gameplay is the only customer then a single point of contact is likely all that's necessary, if any at all.
+
+We can augment our circle collision function to generate a manifold in the event a collision is detected. For now I will generate a single contact point for simplicity. By convention we can name each input shape `a` and `b` respectively, and always generate a `hit_spot` on the surface of `b`.
+
+{% highlight cpp %}
+collision_data circle_to_circle(circle circ_a, circle circ_b)
+{
+	collision_data out;
+	v2 d = circ_b.p - circ_a.p;
+	float d2 = dot(d, d);
+	float r = circ_a.r + circ_b.r;
+	if (d2 < r * r) {
+		out.hit = true;
+		out.hit_spot = circ_b.p - norm(d) * circ_b.r;
+		out.depth = r - len(d);
+		out.normal = norm(d);
+	}
+	return out;
+}
+{% endhighlight %}
+
+This function still suffers from numeric robustness problems. If circles `a` and `b` are right on top of each other the length of `d` will be 0 and cause `norm` to fail with a division by zero error. In the case of zero distance we can simply choose an arbitrary axis for `n`. This also lends itself to a minor optimization where `len` is only called once (as we omit the extra calls to `norm` that call `len` internally).
+
+{% highlight cpp %}
+collision_data circle_to_circle(circle circ_a, circle circ_b)
+{
+	collision_data out;
+	v2 d = circ_b.p - circ_a.p;
+	float d2 = dot(d, d);
+	float r = circ_a.r + circ_b.r;
+	if (d2 < r * r) {
+		float l = len(d);
+		d = l == 0 ? v2(0, 1) : d * (1.0f / l);
+		out.hit = true;
+		out.hit_spot = circ_b.p - d * circ_b.r;
+		out.depth = r - l;
+		out.normal = d;
+	}
+	return out;
+}
+{% endhighlight %}
+
+As you can see, generating the manifold requires a lot of extra work and implementation! But the information is very valuable for physics and gameplay alike.
+
 ### AABB to AABB
+
+Here's the typical aabb to aabb test. It simply checks the four face planes by looking directly at the `x` and `y` components of `min` and `max` elements of our aabb struct.
+
+{% highlight cpp %}
+bool aabb_to_aabb(aabb a, aabb b)
+{
+	if (b.max.x < a.min.x) return false;
+	if (a.max.x < b.min.x) return false;
+	if (b.max.y < a.min.y) return false;
+	if (a.max.y < b.min.y) return false;
+	return true;
+}
+{% endhighlight %}
+
+This function can be optimized to remove excess [branching](https://en.wikipedia.org/wiki/Branch_(computer_science)) so the branch predictor cannot fail.
+
+{% highlight cpp %}
+bool aabb_to_aabb(aabb a, aabb b)
+{
+	bool d0 = b.max.x < a.min.x;
+	bool d1 = a.max.x < b.min.x;
+	bool d2 = b.max.y < a.min.y;
+	bool d3 = a.max.y < b.min.y;
+	return !(d0 | d1 | d2 | d3);
+}
+{% endhighlight %}
+
+You may be wondering why we used bitwise or `|` instead of conditional or `||`. The conditional operator will often generate branches in assembly structure, as defined by the C standard if the first of a conditional fails the rest need not be checked. By using the bitwise operator we instead perform four bitwise or's without any branching logic at all. This makes our function run in constant and predictable time with no branching.
+
+As usual, generate a mafifold is way harder than merely detecting a collision. The algorithm works by checking for overlap on first the x-axis and then the y-axis. This is very similar to the previous test, but actually calculates an overlap distance rather than just checking for a sign with the `<` operator. If either axis is separating we can immediately return no interesction (due to the Separating Axis Test).
+
+Otherwise we must see if the boxes are intersecting more on the x or y-axis. Once known we can immediately deduce a good contact point and the surface normal.
+
+{% highlight cpp %}
+collision_data aabb_to_aabb(aabb a, aabb b)
+{
+	collision_data out;
+	v2 mid_a = (a.min + a.max) * 0.5f;
+	v2 mid_b = (b.min + b.max) * 0.5f;
+	v2 ea = abs((a.max - a.min) * 0.5f);
+	v2 eb = abs((b.max - b.min) * 0.5f);
+	v2 d = mid_b - mid_a;
+
+	// calc overlap on x and y axes
+	float dx = ea.x + eb.x - abs(d.x);
+	if (dx < 0) return out;
+	float dy = ea.y + eb.y - abs(d.y);
+	if (dy < 0) return out;
+
+	v2 n;
+	float depth;
+	v2 p;
+
+	if (dx < dy) {
+		// x axis overlap is smaller
+		depth = dx;
+		if (d.x < 0) {
+			n = v2(-1.0f, 0);
+			p = mid_a - v2(ea.x, 0);
+		} else {
+			n = v2(1.0f, 0);
+			p = mid_a + v2(ea.x, 0);
+		}
+	}  else {
+		// y axis overlap is smaller
+		depth = dy;
+		if (d.y < 0) {
+			n = v2(0, -1.0f);
+			p = mid_a - v2(0, ea.y);
+		} else {
+			n = v2(0, 1.0f);
+			p = mid_a + v2(0, ea.y);
+		}
+	}
+
+	out.hit = true;
+	out.hit_spot = p;
+	out.depth = depth;
+	out.normal = n;
+	return out;
+}
+{% endhighlight %}
+
+### Circle to AABB
+
+The circle to aabb collision detection function is a lot like the circle to circle collision detection function. The trick is to compute the closest point on the aabb to the circle, then perform a circle to circle test with a radius of 0. In older literature the closest point is often called `L`, so we copy that old naming convention here for fun. But if I were you I'd probably name it "closest_point".
+
+{% highlight cpp %}
+float clamp(float v, float lo, float hi) { return min(max(v, lo), hi); }
+v2 clamp(v2 v, v2 lo, v2 hi) { return v2(clamp(v.x, lo.x, hi.x), clamp(v.y, lo.y, hi.y)); }
+
+bool circle_to_aabb(circle a, aabb b)
+{
+	v2 L = clamp(a.p, b.min, b.max);
+	v2 ab = a.p - L;
+	float d2 = dot(ab, ab);
+	float r2 = a.r * a.r;
+	return d2 < r2;
+}
+{% endhighlight %}
+
+You guessed it -- writing the manifold version is *way harder*. We start off the same, calculating L the closest point on the box to the circle. There are two cases to look for: shallow and deep intersections. If the circle center intersects the box it's a deep interesction, shallow otherwise.
+
+For the shallow case we simply treat the problem as two circles, where the circle on L has a radius of 0. For the deep case we snap the sphere's center to the box's exterior, immediately giving us all our manifold pieces (the normal, the depth and a collision point on the surface of the aabb).
+
+{% highlight cpp %}
+collision_data circle_to_aabb(circle a, aabb b)
+{
+	collision_data out;
+	v2 L = clamp(a.p, b.min, b.max);
+	v2 ab = a.p - L;
+	float d2 = dot(ab, ab);
+	float r2 = a.r * a.r;
+
+	if (d2 < r2) {
+		if (d2 != 0) {
+			// shallow (center of circle not inside of AABB)
+			float d = sqrtf(d2);
+			v2 n = norm(ab);
+			out.hit = true;
+			out.depth = a.r - d;
+			out.hit_spot = a.p + n * d;
+			out.normal = n;
+		} else {
+			// deep (center of circle inside of AABB)
+			// clamp circle's center to edge of AABB, then form the manifold
+			v2 mid = (b.min + b.max) * 0.5f;
+			v2 e = (b.max - b.min) * 0.5f;
+			v2 d = a.p - mid;
+			v2 abs_d = abs(d);
+
+			float x_overlap = e.x - abs_d.x;
+			float y_overlap = e.y - abs_d.y;
+
+			float depth;
+			v2 n;
+
+			if (x_overlap < y_overlap) {
+				depth = x_overlap;
+				n = v2(1.0f, 0);
+				n *= (d.x < 0 ? 1.0f : -1.0f);
+			} else {
+				depth = y_overlap;
+				n = v2(0, 1.0f);
+				n *= (d.y < 0 ? 1.0f : -1.0f);
+			}
+
+			out.hit = true;
+			out.depth = a.r + depth;
+			out.hit_spot = a.p - n * depth;
+			out.normal = n;
+		}
+	}
+
+	return out;
+}
+{% endhighlight %}
 
 ### Convex Hull
 
@@ -2478,7 +2716,8 @@ Here are some other particularly interesting tests you can consider learning abo
 * Point in concave polygon (ray odd/even hit test), Ericson Real-Time Collision Detection
 * [Polygon to Polygon via SAT](https://www.gdcvault.com/play/1017646/Physics-for-Game-Programmers-The) (separating axis theorem/test)
 * [Broadphase, or Bounding Volume Heirarchy](https://box2d.org/files/ErinCatto_DynamicBVH_Full.pdf) (BVH) (especially the dynamic aabb tree by E. Catto)
-* (Sutherland-Hodgman clipping algorithm)[https://gist.github.com/RandyGaul/8b9c3f3724ea34959586205220be1da3] for [Dynamic Shape Slicing](https://gamedevelopment.tutsplus.com/tutorials/how-to-dynamically-slice-a-convex-shape--gamedev-14479)
+* [Sutherland-Hodgman clipping algorithm](https://gist.github.com/RandyGaul/8b9c3f3724ea34959586205220be1da3) for [Dynamic Shape Slicing](https://gamedevelopment.tutsplus.com/tutorials/how-to-dynamically-slice-a-convex-shape--gamedev-14479)
+* Time of impact (TOI), swept collision detection, or [continuous collision](https://box2d.org/files/ErinCatto_ContinuousCollision_GDC2013.pdf)
 
 #### Computing a Convex Hull
 
@@ -2560,8 +2799,6 @@ int convex_hull(v2* verts, int count)
 ### Advanced Collision Detection
 
 More advanced collision detection routines are out of scope for this article. Things like Capsule and Polygon collisions require quite lot of complicated mathematics and code. That's all for another time and another blog post! For now you can find a full implementation of correctly implemented and efficient 2D collisions routines at [cute_c2.h](https://github.com/RandyGaul/cute_framework/blob/master/libraries/cute/cute_c2.h), a small single-file C library. It covers circles, capsules, polygons, aabbs, rays, convex hull, shape expansion, closest point pairs, and time of impact (swept) collision detection.
-
-For more further readings I highly suggest Dirk Gregorius's GDC talks on the Separating Axis Thereom. Another good resource is Christer Ericson's orange book Real-Time Collision Detection, although it often does not cover the mathematics for generating contact manifold information, is of top quality when it comes to learning 3D mathematics and how to understand the geometry involved in collision detection.
 
 ## Numeric and Geometric Robustness
 
