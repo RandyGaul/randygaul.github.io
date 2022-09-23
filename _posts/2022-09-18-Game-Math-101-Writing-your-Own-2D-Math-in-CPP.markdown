@@ -37,8 +37,6 @@ gif here
 * Transforms
 * Raycasting Basics
 * Collision Detection Basics
-* Numeric and Geometric Robustness
-* Random Numbers
 * Toy Demo
 
 You'll need to know some basic C++ (well, more like just some basic C stuff), but not much so don't be worried. If you're not quite comfortable feel free to visit some online C++ tutorials and then come back here later to try again. At a minimum I'd recommend learning about these topics:
@@ -2809,12 +2807,6 @@ int convex_hull(v2* verts, int count)
 ### Advanced Collision Detection
 
 More advanced collision detection routines are out of scope for this article. Things like Capsule and Polygon collisions require quite lot of complicated mathematics and code. That's all for another time and another blog post! For now you can find a full implementation of correctly implemented and efficient 2D collisions routines at [cute_c2.h](https://github.com/RandyGaul/cute_framework/blob/master/libraries/cute/cute_c2.h), a small single-file C library. It covers circles, capsules, polygons, aabbs, rays, convex hull, shape expansion, closest point pairs, and time of impact (swept) collision detection.
-
-## Numeric and Geometric Robustness
-
-## Random Numbers
-
-## Pointer Aliasing
 
 ## Toy Demo
 
