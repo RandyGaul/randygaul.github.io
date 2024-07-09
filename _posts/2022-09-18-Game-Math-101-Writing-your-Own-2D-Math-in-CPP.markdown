@@ -4,8 +4,6 @@ title:  "Game Math 101, Writing your Own 2D Math in C++"
 date:   2022-09-18
 categories: math
 ---
-THIS POST IS A WIP
-
 Do you want to make a game but don't know any math? Do you want to skip endless hours of reading arcane math texts and go straight to the useful stuff? Good! Me too. Let's just skip straight ahead to the useful stuff. Sit back, grab yourself a lunchable, and get ready to become a wizard.
 
 We will be using C++ and writing our own math to create some demonstrations and animations from scratch. By the end of this article you will produce an interactive experience like the one seen just here below in this cute gif!
@@ -2865,7 +2863,3 @@ sutherland_hodgman_output sutherland_hodgman(halfspace split, polygon in, const 
 ### Advanced Collision Detection
 
 More advanced collision detection routines are out of scope for this article. Things like Capsule and Polygon collisions require quite lot of complicated mathematics and code. That's all for another time and another blog post! For now you can find a full implementation of correctly implemented and efficient 2D collisions routines at [cute_c2.h](https://github.com/RandyGaul/cute_framework/blob/master/libraries/cute/cute_c2.h), a small single-file C library. It covers circles, capsules, polygons, aabbs, rays, convex hull, shape expansion, closest point pairs, and time of impact (swept) collision detection.
-
-## Toy Demo
-
-THIS POST IS A WIP
