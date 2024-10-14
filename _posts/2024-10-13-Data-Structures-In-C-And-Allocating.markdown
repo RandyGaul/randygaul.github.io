@@ -102,7 +102,7 @@ The final downside here is the buffer is semantically static, a lot like the `st
 FORCE_INLINE void* ascratch_impl(int item_size, int n)
 {
 	int bytes = item_size * n;
-	void* a = cf_astatic(tmp_alloc(bytes), bytes, item_size);
+	void* a = astatic(tmp_alloc(bytes), bytes, item_size);
 	return a;
 }
 ```
