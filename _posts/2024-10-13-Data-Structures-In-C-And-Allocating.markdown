@@ -95,7 +95,7 @@ The implementation of `atmp` could then hide a unique id in a static variable, s
 
 The final downside here is the buffer is semantically static, a lot like the `static` keyword. You won't be getting unique buffers each time a function is called, which restricts it's usage. In the event you want to return an actual unique buffer that will persist, get handed around to other functions, then simply allocating directly from the arena without a caching mechanism is preferred. A different macro can provide this quite easily, directly calling into the equivalent of `tmp_alloc` in your own codebase.
 
-```
+```c
 // Similar to `atmp` but does not uniquely identify the callsite.
 // ...Simply returns a statically allocated buffer.
 #define ascratch(T, n) (T*)ascratch_impl(sizeof(T), n)
