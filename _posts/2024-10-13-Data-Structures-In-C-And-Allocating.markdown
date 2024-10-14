@@ -93,4 +93,6 @@ The implementation of `atmp` could then hide a unique id in a static variable, s
 #define atmp(a, n) do { static int id = g_id_gen++; a = atmp_impl(id, sizeof(a), n); } while(0)
 ```
 
+The final downside here is the buffer is semantically static, a lot like the `static` keyword. You won't be getting unique buffers each time a function is called, which restricts it's usage. In the event you want to return an actual unique buffer that will persist, get handed around to other functions, then simply allocating directly from the arena without a caching mechanism is preferred. A different macro can provide this quite easily, directly calling into the equivalent of `tmp_alloc` in your own codebase.
+
 And there you have it! It's nothing particularly new or special, just a mishmash of a few different techniques and careful API design. The vast majority of dynamic arrays are reduced to a few if-checks and a single hashtable hit. Only in worst-case scenarios is `malloc` and `free` ever touched, and memory consumption scales relative to the number of unique callsites, instead of by how many times individual functions are called.
