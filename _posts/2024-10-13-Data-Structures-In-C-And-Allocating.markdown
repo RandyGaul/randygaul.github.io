@@ -2,7 +2,7 @@
 layout: post
 title:  "Data Structures in C and Allocating"
 date:   2024-10-13
-categories: data structures, memory
+categories: data-structures  memory
 ---
 I've been researching ways to make C more ergonomic. After years of trial and error, I've found that the most maintainable code is typically pure, portable C. However, one major pain point keeping me in C++ is simplifying user code when dealing with data structures. While C++ allows defining classes with custom semantics, C lacks that kind of flexibility—or so I thought.
 
