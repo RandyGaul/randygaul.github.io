@@ -95,4 +95,16 @@ The implementation of `atmp` could then hide a unique id in a static variable, s
 
 The final downside here is the buffer is semantically static, a lot like the `static` keyword. You won't be getting unique buffers each time a function is called, which restricts it's usage. In the event you want to return an actual unique buffer that will persist, get handed around to other functions, then simply allocating directly from the arena without a caching mechanism is preferred. A different macro can provide this quite easily, directly calling into the equivalent of `tmp_alloc` in your own codebase.
 
+```
+// Similar to `atmp` but does not uniquely identify the callsite.
+// ...Simply returns a statically allocated buffer.
+#define ascratch(T, n) (T*)ascratch_impl(sizeof(T), n)
+FORCE_INLINE void* ascratch_impl(int item_size, int n)
+{
+	int bytes = item_size * n;
+	void* a = cf_astatic(tmp_alloc(bytes), bytes, item_size);
+	return a;
+}
+```
+
 And there you have it! It's nothing particularly new or special, just a mishmash of a few different techniques and careful API design. The vast majority of dynamic arrays are reduced to a few if-checks and a single hashtable hit. Only in worst-case scenarios is `malloc` and `free` ever touched, and memory consumption scales relative to the number of unique callsites, instead of by how many times individual functions are called.
