@@ -45,7 +45,9 @@ Shapes can be rendered alongside the sprite/text API. A traditional 2D shape ren
 
 Example of drawing rounded, annular (stroked) shapes with and without antialias:
 
-![aa_boxes](/assets/aa_boxes.gif)
+<div style="text-align: center;">
+  <img src="/assets/aa_boxes.gif" alt="aa_boxes">
+</div>
 
 Instead, a simpler way to render shapes that naturally lends itself to both rounding and antialiasing is the concept of signed-distance functions, focusing on finding the isosurface of a shape. Take for example a circle. We can, for each pixel, calculate the distance of the pixel to the circle's surface:
 
@@ -78,16 +80,25 @@ This ternary will not produce branching or cause any significant performance ove
 
 To round the shape simply adjust the surface of the shape by a constant. This inflates the shape. Examples can be seen over at [Inigo's work](https://iquilezles.org/articles/distfunctions2d/). The same goes for antialiasing -- simply blur between boundaries over the region of distance near zero. `smoothstep` works great for this. Here are some examples of shape inflating:
 
-![chubiness](/assets/chubiness.gif)
-![chubiness_triangle](/assets/chubiness_triangle.gif)
+<div style="text-align: center;">
+  <img src="/assets/chubiness.gif" alt="chubiness">
+</div>
+
+<div style="text-align: center;">
+  <img src="/assets/chubiness_triangle.gif" alt="chubiness_triangle">
+</div>
 
 Here's an example of drawing a blurred shape:
 
-![aa_scale](/assets/aa_scale.gif)
+<div style="text-align: center;">
+  <img src="/assets/aa_scale.gif" alt="aa_scale">
+</div>
 
 Here's an example of polygon rendering (up to 8 vertices):
 
-![polygon_cf2](/assets/polygon_cf2.gif)
+<div style="text-align: center;">
+  <img src="/assets/polygon_cf2.gif" alt="polygon_cf2">
+</div>
 
 Using the SDF technique all shape variety becomes isolated down to the SDF itself. Most other aspects of rendering shapes becomes agnostic to the shape type itself. This helps scale up the number of shapes to be supported without incurring too much of a development or maintenance cost. Here's a quick summary of how all these pieces fit together:
 
@@ -137,19 +148,25 @@ One difficulty I encountered with rendering polylines is coming up with a good t
 
 The strategy I went with produces a quad per segment, and potentially a wedge for narrow corners. Side note: hopefully you don't see the bugs in certain cases in this gif:
 
-![aa_lines_geom](/assets/aa_lines_geom.gif)
+<div style="text-align: center;">
+  <img src="/assets/aa_lines_geom.gif" alt="aa_lines_geom">
+</div>
 
 Bugs aside, as long as adjacent vertices from one segment to another are identical you can achieve a perfect render. For the SDF's themselves I pass in each segment's start and end position, but also the start position of the next segment, for three points total. This defines an oriented corner about the polyline. The SDF for two edges forming a single corner can be queried and merged pretty easily all at once by taking the mininum of each SDF.
 
 The result are these perfectly antialiased and rounded polylines, all drawn with just a small number of tightly wrapped quads.
 
-![aa_lines_translucent](/assets/aa_lines_translucent.gif)
+<div style="text-align: center;">
+  <img src="/assets/aa_lines_translucent.gif" alt="aa_lines_translucent">
+</div>
 
 Bugs aside (apologies again for that) this style of polyline rendering handles all but self-intersecting cases of disparate corners. However, self-intersecting corners are gracefully handled due to SDF merging in the fragment shader. It's really an amazing strategy to get perfcetly rounded, antialiased lines going. You can even support annular/stroked lines (outlines with empty interiors) with this method without any additional code complexity. It gracefully handles thin lines less than a pixel in width (you can clamp to some visual distance, e.g. half a pixel width) all the way up to, and beyond, very fat lines spanning the screen.
 
 Here's what they look like opaque:
 
-![aa_lines](/assets/aa_lines.gif)
+<div style="text-align: center;">
+  <img src="/assets/aa_lines.gif" alt="aa_lines">
+</div>
 
 # Other Shape Effects
 
