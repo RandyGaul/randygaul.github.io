@@ -43,9 +43,11 @@ The whole thing was coded about 90% by Claude, the last 10% being bugfixes, opti
 
 Now obviously this screenshot is carefully cropped to hide all the bugs, but it certainly did produce some kind of soft-shadows, constant-time global illumination. And well, the results speak for themselves:
 
-<blockquote class="twitter-tweet">
-  <a href="https://twitter.com/RandyPGaul/status/2023576821904896113"></a>
-</blockquote>
+<div style="display: flex; justify-content: center;">
+  <blockquote class="twitter-tweet">
+    <a href="https://twitter.com/RandyPGaul/status/2023576821904896113"></a>
+  </blockquote>
+</div>
 
 # Rethinking Code Maintenance Cost
 
@@ -67,7 +69,8 @@ All this to say, what once was too much burden to maintain becomes often unlocka
 
 Let's compare traditional and AI assisted coding flows:
 
-```
+<div style="text-align: center;">
+<pre style="display: inline-block; text-align: left;">
               TRADITIONAL HAND-CODING
     ┌─────────────────────────────────────────┐
     │                                         │
@@ -100,11 +103,13 @@ Let's compare traditional and AI assisted coding flows:
     │   └───────────────────────┘             │
     │                                         │
     └─────────────────────────────────────────┘
-```
+</pre>
+</div>
 
 The really expensive bits are when you're stuck in a loop of debug & test/bugs and have to repeatedly go back to design/write by hand. The by-hand or line-by-line part is very time consuming and honestly is a lot of hard work. At the end of the day, in order to really maximize your own time efficiency you have to be really brutal about tradeoffs. Code starts to look *extremely expensive*, less code is better, ease of maintenance is priority, lowering risk over time is priority. These are all still true even with AI coding, but... Well just look:
 
-```
+<div style="text-align: center;">
+<pre style="display: inline-block; text-align: left;">
                AI-ASSISTED CODING
     ┌─────────────────────────────────────────┐
     │                                         │
@@ -138,7 +143,8 @@ The really expensive bits are when you're stuck in a loop of debug & test/bugs a
     │       │       gets built      │         │
     │       └───────────────────────┘         │
     └─────────────────────────────────────────┘
-```
+</pre>
+</div>
 
 You just have this undying minion who never tires, always available to plow through the dirty work. It's like growing 10 arms and 3 brains or something. Time efficiency just goes way up because iteration time between specifying the problem and shipping a thing gets just absolutely smashed by AI. Here's another visual for you, rare footage of Claude smashing bugs:
 
